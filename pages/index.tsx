@@ -1,8 +1,9 @@
 import axios from "axios";
 import { Inter } from "next/font/google";
 import { LoginContext } from "@/context/Login";
-import { useContext, MouseEvent } from "react";
+import { useContext, MouseEvent, useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
+import { useRouter } from "next/router";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,13 +14,24 @@ interface DataProps {
 }
 
 export default function Home(data: DataProps) {
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const loginCtx = useContext(LoginContext);
   console.log("Login context: ", loginCtx);
   console.log("Fetched data: ", data);
-  const loginToggler = (event: MouseEvent<HTMLButtonElement>) => {
-    if (loginCtx.changeLoginStatus) {
-      loginCtx.changeLoginStatus();
+  const logoutHandler = () => {
+    if (loginCtx.logout) {
+      loginCtx.logout();
     }
+  };
+  useEffect(() => {
+    if (loginCtx.loginState) {
+      setLoading(false);
+    }
+  }, [loginCtx]);
+
+  const redirectHandler = (path: string) => {
+    router.push(path);
   };
   return (
     <main
@@ -27,13 +39,13 @@ export default function Home(data: DataProps) {
     >
       <Navbar />
       <h1>College Bar Finder</h1>
-      {loginCtx && (
+      {loginCtx && !loading && (
         <>
           {loginCtx.loginState?.isLoggedIn && (
-            <button onClick={loginToggler}>Logout</button>
+            <button onClick={logoutHandler}>Logout</button>
           )}
           {!loginCtx.loginState?.isLoggedIn && (
-            <button onClick={loginToggler}>Login</button>
+            <button onClick={() => redirectHandler("/login")}>Login</button>
           )}
         </>
       )}

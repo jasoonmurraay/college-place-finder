@@ -7,37 +7,58 @@ interface LoginProviderProps {
 interface LoginContextType {
   loginState: {
     isLoggedIn: boolean;
+    id: string | null;
   };
-  changeLoginStatus: () => void;
+  login: (id: string) => void;
+  logout: () => void;
 }
 
 export const LoginContext = createContext<Partial<LoginContextType>>({});
 
 export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   const [loginState, setLoginState] = useState({
-    isLoggedIn: false,
-  });
-
-  useEffect(() => {
-    let localLogin =
+    isLoggedIn:
       typeof window !== "undefined"
-        ? localStorage.getItem("cbUsername")
-        : false;
-    if (localLogin) {
-      setLoginState({
-        isLoggedIn: true,
-      });
-    }
-  }, []);
+        ? Boolean(localStorage.getItem("cbLoggedIn"))
+        : false,
+    id: typeof window !== "undefined" ? localStorage.getItem("cbUsername") : "",
+  });
+  console.log("Login Context from context folder: ", loginState);
 
-  const changeLoginStatus = () => {
+  // useEffect(() => {
+  //   let localLogin =
+  //     typeof window !== "undefined"
+  //       ? localStorage.getItem("cbUsername")
+  //       : false;
+  //   if (localLogin) {
+  //     setLoginState({
+  //       isLoggedIn: true,
+  //       id:
+  //     });
+  //   }
+  // }, []);
+
+  const login = (id: string) => {
+    localStorage.setItem("cbUsername", id);
+    localStorage.setItem("cbLoggedIn", "true");
     setLoginState({
-      isLoggedIn: !loginState.isLoggedIn,
+      isLoggedIn: true,
+      id: id,
+    });
+  };
+
+  const logout = () => {
+    console.log("Logging out!");
+    localStorage.removeItem("cbUsername");
+    localStorage.removeItem("cbLoggedIn");
+    setLoginState({
+      isLoggedIn: false,
+      id: "",
     });
   };
 
   return (
-    <LoginContext.Provider value={{ loginState, changeLoginStatus }}>
+    <LoginContext.Provider value={{ loginState, login, logout }}>
       {children}
     </LoginContext.Provider>
   );

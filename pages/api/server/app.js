@@ -94,20 +94,38 @@ app.get("/profile", async (req, res) => {
   await client.connect();
   const db = client.db("Users");
   const users = db.collection("Users");
-  await users.findOne({ _id: new ObjectId(req.query.query) }).then((user) => {
-    return res
-      .status(200)
-      .send({ username: user.username, _id: user._id, email: user.email });
-  });
+  await users
+    .findOne({ _id: new ObjectId(req.query.query) })
+    .then((user) => {
+      return res
+        .status(200)
+        .send({ username: user.username, _id: user._id, email: user.email });
+    })
+    .catch((e) => {
+      console.log("e: ", e);
+      return res.status(401).send(e);
+    });
 });
 
 app.get("/schools", async (req, res) => {
   await client.connect();
   const db = client.db("Schools");
   const schools = db.collection("Schools");
-  const allSchools = await schools.find({}).toArray();
+  const allSchools = await schools.find({}).sort({ CommonName: 1 }).toArray();
   console.log("Schools: ", allSchools);
   res.status(200).send(allSchools);
+});
+
+app.get("/schools/:id", async (req, res) => {
+  console.log("params: ", req.params);
+  await client.connect();
+  const schools = client.db("Schools").collection("Schools");
+  const singleSchool = await schools
+    .findOne({ _id: new ObjectId(req.params.id) })
+    .then((school) => {
+      console.log("School Data: ", school);
+      return res.status(200).send({ school });
+    });
 });
 
 app.listen(5000, () => {

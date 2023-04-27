@@ -3,12 +3,17 @@ import axios from "axios";
 import { useRef, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { LoginContext } from "@/context/Login";
+import ErrorMsg from "@/components/ErrorMsg";
 
 const login = () => {
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<{
+    state: boolean;
+    message: string | null;
+  }>({ state: false, message: null });
   const loginHandler = async () => {
     if (usernameRef.current && passwordRef.current) {
       await axios
@@ -17,11 +22,15 @@ const login = () => {
           password: passwordRef.current.value,
         })
         .then((data) => {
+          setError({ state: false, message: null });
           console.log("Login data: ", data);
           if (data.data && loginCtx.login) {
             loginCtx.login(data.data.id);
             router.push(`/`);
           }
+        })
+        .catch((e) => {
+          setError({ state: true, message: e.response.data });
         });
     }
   };
@@ -32,6 +41,11 @@ const login = () => {
       }
     }
   }, [loginCtx]);
+
+  const changeHandler = () => {
+    setError({ state: false, message: null });
+  };
+
   return (
     <>
       <Navbar />
@@ -49,6 +63,7 @@ const login = () => {
           </label>
           <input
             ref={usernameRef}
+            onChange={changeHandler}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="username"
             type="text"
@@ -64,6 +79,7 @@ const login = () => {
           </label>
           <input
             ref={passwordRef}
+            onChange={changeHandler}
             className="shadow appearance-none border  rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
             id="password"
             type="password"
@@ -80,7 +96,11 @@ const login = () => {
           </button>
         </div>
       </form>
-      <a href="/signup">Sign up</a>
+      <div>
+        <p>Don't have an account?</p>
+        <a href="/signup">Sign up!</a>
+      </div>
+      {error.message && <ErrorMsg message={error.message} />}
     </>
   );
 };

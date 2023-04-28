@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import ReactMapGL from "react-map-gl";
 import dotenv from "dotenv";
 import mapboxgl from "mapbox-gl";
-
+import { Viewport } from "@/data/interfaces";
 // const Marker = mapboxgl.Marker;
 import { Marker } from "react-map-gl";
 dotenv.config();
@@ -21,14 +21,6 @@ type PropsType = {
   data: School;
 };
 
-type Viewport = {
-  latitude: number;
-  longitude: number;
-  zoom: number;
-  width: string;
-  height: number;
-};
-
 const schoolPage = (props: PropsType) => {
   const latitude = Number(props.data.latitude);
   const longitude = Number(props.data.longitude);
@@ -40,11 +32,18 @@ const schoolPage = (props: PropsType) => {
   });
 
   console.log("Props: ", props);
-  //   const renderEstablishments = () => {
-  //     return props.data.establishments.map((place) => {
-  //       <li>{place.name}</li>;
-  //     });
-  //   };
+  const renderEstablishments = () => {
+    return props.data.establishments.map((place) => {
+      return (
+        <li
+          onClick={() => redirectHandler(`/places/${place._id}`, null)}
+          key={place._id}
+        >
+          {place.Name}
+        </li>
+      );
+    });
+  };
 
   const redirectHandler = (path: string, id: string | null) => {
     router.push({
@@ -69,14 +68,7 @@ const schoolPage = (props: PropsType) => {
                 zoom: evt.viewState.zoom,
               })
             }
-          >
-            {/* <Marker
-            latitude={Number(props.data.latitude)}
-            longitude={Number(props.data.longitude)}
-          >
-            <img className="h-5" src="/map-pin.png"></img>
-          </Marker> */}
-          </ReactMapGL>
+          ></ReactMapGL>
         </div>
         <h1 className="text-2xl">
           {props.data.CommonName} {props.data.Teams}
@@ -88,11 +80,11 @@ const schoolPage = (props: PropsType) => {
         <p>{props.data.Subdivision}</p>
         <div>
           <h2>Places: </h2>
-          {/* {props.data.establishments.length ? (
-          <ul>{renderEstablishments()}</ul>
-        ) : (
-          <></>
-        )} */}
+          {props.data.establishments.length ? (
+            <ul>{renderEstablishments()}</ul>
+          ) : (
+            <></>
+          )}
         </div>
         <button
           onClick={() => redirectHandler("/places/create", props.data._id)}

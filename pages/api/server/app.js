@@ -3,7 +3,9 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
 require("dotenv").config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -125,6 +127,69 @@ app.get("/schools/:id", async (req, res) => {
     .then((school) => {
       console.log("School Data: ", school);
       return res.status(200).send({ school });
+    });
+});
+
+app.post("/places", async (req, res) => {
+  const { address, city, state, zip, school, name } = req.body;
+  const fullAddress = `${address} ${city} ${state} ${zip}`;
+  const token = process.env.HIGHER_SCOPE_MAPBOX_TOKEN;
+  await axios
+    .get(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${fullAddress}.json?proximity=ip&access_token=${token}`
+    )
+    .then(async (data) => {
+      const coordinates = data.data.features[0].geometry.coordinates;
+      await client.connect();
+      const places = client.db("Places").collection("Places");
+      const existingPlace = await places.findOne({
+        Latitude: coordinates[0],
+        Longitude: coordinates[1],
+      });
+      if (!existingPlace) {
+        const schools = client.db("Schools").collection("Schools");
+        const currSchool = await schools.findOne({
+          _id: new ObjectId(school._id),
+        });
+        const newPlace = await places.insertOne({
+          Name: name,
+          School: currSchool,
+          Address: address,
+          City: city,
+          State: state,
+          Zip: zip,
+          Latitude: coordinates[1],
+          Longitude: coordinates[0],
+          Reviews: [],
+        });
+        const updatedPlace = await places.findOne({
+          _id: newPlace.insertedId,
+        });
+        await schools.updateOne(
+          { _id: currSchool._id },
+          { $push: { establishments: updatedPlace } }
+        );
+        res.status(200).send(newPlace);
+      } else {
+        res.status(400).send({ message: "This place already exists" });
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(400).send(err);
+    });
+});
+
+app.get("/places/:id", async (req, res) => {
+  await client.connect();
+  const places = client.db("Places").collection("Places");
+  const targetPlace = await places
+    .findOne({ _id: new ObjectId(req.params.id) })
+    .then((place) => {
+      return res.status(200).send({ place });
+    })
+    .catch((e) => {
+      return res.status(400).send(e);
     });
 });
 

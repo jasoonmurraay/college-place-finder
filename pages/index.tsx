@@ -13,12 +13,11 @@ interface DataProps {
   };
 }
 
-export default function Home(data: DataProps) {
+export default function Home() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const loginCtx = useContext(LoginContext);
   console.log("Login context: ", loginCtx);
-  console.log("Fetched data: ", data);
   const logoutHandler = () => {
     if (loginCtx.logout) {
       loginCtx.logout();
@@ -53,11 +52,11 @@ export default function Home(data: DataProps) {
   );
 }
 
-export async function getServerSideProps() {
-  const { data } = await axios.get("http://localhost:5000");
-  return {
-    props: {
-      data: data,
-    },
-  };
-}
+// export async function getServerSideProps() {
+//   const { data } = await axios.get("http://localhost:5000");
+//   return {
+//     props: {
+//       data: data,
+//     },
+//   };
+// }

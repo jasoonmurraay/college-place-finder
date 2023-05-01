@@ -34,11 +34,11 @@ async function run() {
 
 run();
 
-app.get("/", (req, res) => {
-  return res.json({
-    message: "hello!",
-  });
-});
+// app.get("/", (req, res) => {
+//   return res.json({
+//     message: "hello!",
+//   });
+// });
 
 app.post("/login", async (req, res) => {
   await client.connect();
@@ -99,9 +99,12 @@ app.get("/profile", async (req, res) => {
   await users
     .findOne({ _id: new ObjectId(req.query.query) })
     .then((user) => {
-      return res
-        .status(200)
-        .send({ username: user.username, _id: user._id, email: user.email });
+      return res.status(200).send({
+        username: user.username,
+        _id: user._id,
+        email: user.email,
+        reviews: user.Reviews,
+      });
     })
     .catch((e) => {
       console.log("e: ", e);
@@ -191,6 +194,48 @@ app.get("/places/:id", async (req, res) => {
     .catch((e) => {
       return res.status(400).send(e);
     });
+});
+
+app.post("/reviews", async (req, res) => {
+  const review = req.body;
+  await client.connect();
+  try {
+    const reviews = client.db("Reviews").collection("Reviews");
+    const users = client.db("Users").collection("Users");
+    const places = client.db("Places").collection("Places");
+    const author = await users.findOne({ _id: new ObjectId(review.author) });
+    const place = await places.findOne({ _id: new ObjectId(review.place) });
+    const newReview = await reviews.insertOne({
+      author,
+      place,
+      title: review.title,
+      foodQuality: review.foodQuality,
+      drinkQuality: review.drinkQuality,
+      serviceQuality: review.serviceQuality,
+      goodForStudents: review.goodForStudents,
+      goodForFamilies: review.goodForFamilies,
+      forUnder21: review.forUnder21,
+      noiseLevel: review.noiseLevel,
+      prices: review.prices,
+      otherComments: review.otherComments,
+    });
+    const updatednewReview = await reviews.findOne({
+      _id: newReview.insertedId,
+    });
+    await users.updateOne(
+      { _id: author._id },
+      { $push: { Reviews: updatednewReview } }
+    );
+    await places.updateOne(
+      { _id: place._id },
+      {
+        $push: { Reviews: updatednewReview },
+      }
+    );
+    res.status(200).send("Review uploaded!");
+  } catch (err) {
+    res.status(400).send(err);
+  }
 });
 
 app.listen(5000, () => {

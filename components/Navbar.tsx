@@ -35,16 +35,30 @@ const Navbar = () => {
         <nav className="flex items-center justify-between flex-wrap bg-teal-500 p-6">
           <a href="/">College Bar Finder</a>
           <ul className="flex items-center px-3 py-2 ">
+            <li onClick={() => redirectHandler("/schools")} className="mx-3">
+              Schools
+            </li>
             {loginCtx.loginState?.isLoggedIn && (
               <>
-                <li onClick={() => redirectHandler("/profile")}>Profile</li>
-                <li onClick={logoutHandler}>Logout</li>
+                <li
+                  className="mx-3"
+                  onClick={() => redirectHandler("/profile")}
+                >
+                  Profile
+                </li>
+                <li className="mx-3" onClick={logoutHandler}>
+                  Logout
+                </li>
               </>
             )}
             {!loginCtx.loginState?.isLoggedIn && (
               <>
-                <li onClick={() => redirectHandler("/login")}>Login</li>
-                <li onClick={() => redirectHandler("/signup")}>Sign Up</li>
+                <li className="mx-3" onClick={() => redirectHandler("/login")}>
+                  Login
+                </li>
+                <li className="mx-3" onClick={() => redirectHandler("/signup")}>
+                  Sign Up
+                </li>
               </>
             )}
           </ul>

@@ -13,16 +13,26 @@ export interface Establishment {
 
 export interface Review {
   _id: string;
-  Title: string;
-  Food: number;
-  Service: number;
-  ForStudents: number;
-  ForFamilies: number;
-  ForFreshman: number;
-  NoiseLevel: number;
-  Price: number;
-  Drinks: number;
-  Comments: string;
+  author: User;
+  place: Establishment;
+  title: string;
+  foodQuality: number;
+  serviceQuality: number;
+  goodForStudents: number;
+  goodForFamilies: number;
+  forUnder21: number;
+  noiseLevel: number;
+  prices: number;
+  drinkQuality: number;
+  otherComments: string;
+}
+
+export interface User {
+  _id: string;
+  username: string;
+  password: string;
+  email: string;
+  Reviews: Review[];
 }
 
 export interface School {

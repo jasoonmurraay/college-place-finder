@@ -12,11 +12,15 @@ const signup = () => {
   const emailRef = useRef<HTMLInputElement>(null);
   const signupHandler = async () => {
     if (usernameRef.current && passwordRef.current && emailRef.current) {
-      await axios.post("http://localhost:5000/signup", {
-        username: usernameRef.current ? usernameRef.current.value : "",
-        password: passwordRef.current ? passwordRef.current.value : "",
-        email: emailRef.current ? emailRef.current.value : "",
-      });
+      await axios
+        .post("http://localhost:5000/signup", {
+          username: usernameRef.current ? usernameRef.current.value : "",
+          password: passwordRef.current ? passwordRef.current.value : "",
+          email: emailRef.current ? emailRef.current.value : "",
+        })
+        .then((data) => {
+          console.log("Sign up data: ", data);
+        });
     }
   };
   useEffect(() => {

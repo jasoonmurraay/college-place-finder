@@ -20,7 +20,7 @@ const client = new MongoClient(MongoUrl, {
   },
 });
 
-app.use(cors())
+app.use(cors());
 
 async function run() {
   try {
@@ -48,7 +48,6 @@ app.post("/login", async (req, res) => {
     .findOne({ username: req.body.username })
     .then(async (user) => {
       if (!user) {
-        console.log("User not found");
         return res.status(401).send("Invalid username or password");
       }
       const passwordMatch = await bcrypt.compare(
@@ -56,22 +55,19 @@ app.post("/login", async (req, res) => {
         user.password
       );
       if (!passwordMatch) {
-        console.log("Invalid password");
         return res.status(401).send("Invalid username or password");
       }
-      console.log("User logged in successfully");
       return res
         .status(200)
         .send({ message: "User logged in successfully", id: user._id });
     })
     .catch((e) => {
-      return res.status(400).send(e)
+      return res.status(400).send(e);
     });
 });
 
 app.post("/signup", async (req, res) => {
-  console.log("Sign up req: ", req.body);
-  const hashPassword = bcrypt
+  bcrypt
     .genSalt(Number(process.env.SALT_ROUNDS))
     .then((salt) => {
       return bcrypt.hash(req.body.password, salt);
@@ -81,57 +77,50 @@ app.post("/signup", async (req, res) => {
         username: req.body.username,
         password: hash,
         email: req.body.email,
+        Reviews: [],
+        Favorites: [],
       };
-      console.log("Data: ", data);
       await client.connect();
       const db = client.db("Users");
       const users = db.collection("Users");
       await users.insertOne(data);
     })
     .catch((err) => {
-      console.error(err.message);
+      res.status(400).send({ message: "An error has occurred", error: err });
     });
-  console.log("HashPassword: ", hashPassword);
 });
 
 app.get("/profile", async (req, res) => {
   await client.connect();
   const db = client.db("Users");
   const users = db.collection("Users");
-  const user = await users
-    .findOne({ _id: new ObjectId(req.query.query) })
-    .then((user) => {
-      console.log("User: ", user)
-      if (!user) {
-        return res.status(400).send("No user exists")
-      }
-      return res.status(200).send({
-        username: user.username,
-        _id: user._id,
-        email: user.email,
-        reviews: user.Reviews,
-      });
-    })
-  
+  await users.findOne({ _id: new ObjectId(req.query.query) }).then((user) => {
+    if (!user) {
+      return res.status(400).send("No user exists");
+    }
+    return res.status(200).send({
+      username: user.username,
+      _id: user._id,
+      email: user.email,
+      Reviews: user.Reviews,
+      Favorites: user.Favorites,
+    });
+  });
 });
 
 app.get("/schools", async (req, res) => {
   await client.connect();
-  const db = client.db("Schools");
-  const schools = db.collection("Schools");
+  const schools = client.db("Schools").collection("Schools");
   const allSchools = await schools.find({}).sort({ CommonName: 1 }).toArray();
-  console.log("Schools: ", allSchools);
   res.status(200).send(allSchools);
 });
 
 app.get("/schools/:id", async (req, res) => {
-  console.log("params: ", req.params);
   await client.connect();
   const schools = client.db("Schools").collection("Schools");
   const singleSchool = await schools
     .findOne({ _id: new ObjectId(req.params.id) })
     .then((school) => {
-      console.log("School Data: ", school);
       return res.status(200).send({ school });
     });
 });
@@ -181,7 +170,6 @@ app.post("/places", async (req, res) => {
       }
     })
     .catch((err) => {
-      console.error(err);
       res.status(400).send(err);
     });
 });
@@ -238,6 +226,42 @@ app.post("/reviews", async (req, res) => {
     res.status(200).send("Review uploaded!");
   } catch (err) {
     res.status(400).send(err);
+  }
+});
+
+app.post("/favorites", async (req, res) => {
+  try {
+    const placeId = req.body.placeId;
+    const userId = req.body.userId;
+    await client.connect();
+    const users = client.db("Users").collection("Users");
+    const places = client.db("Places").collection("Places");
+    const place = await places.findOne({ _id: new ObjectId(placeId) });
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $push: { Favorites: place } }
+    );
+    res.status(200).send({ message: "Added to favorites!" });
+  } catch (err) {
+    res.status(400).send({ message: "An error has occurred", error: err });
+  }
+});
+
+app.put("/favorites", async (req, res) => {
+  try {
+    const placeId = req.body.placeId;
+    const userId = req.body.userId;
+    await client.connect();
+    const users = client.db("Users").collection("Users");
+    const places = client.db("Places").collection("Places");
+    const place = await places.findOne({ _id: new ObjectId(placeId) });
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $pull: { Favorites: place } }
+    );
+    res.status(200).send({ message: "Removed from favorites!" });
+  } catch (err) {
+    res.status(400).send({ message: "An error has occurred", error: err });
   }
 });
 

@@ -33,6 +33,7 @@ export interface User {
   password: string;
   email: string;
   Reviews: Review[];
+  Favorites: Establishment[];
 }
 
 export interface School {

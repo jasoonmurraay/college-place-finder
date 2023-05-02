@@ -1,22 +1,15 @@
 import Navbar from "@/components/Navbar";
 import { LoginContext } from "@/context/Login";
-import { Review } from "@/data/interfaces";
+import { Review, User } from "@/data/interfaces";
 import axios from "axios";
 import { useEffect, useContext, useState } from "react";
 import { useRouter } from "next/router";
 import ReviewComponent from "@/components/ReviewComponent";
 
-type userData = {
-  email: string;
-  username: string;
-  _id: string;
-  reviews: Review[];
-};
-
 const profile = () => {
   const router = useRouter();
   const loginCtx = useContext(LoginContext);
-  const [data, setData] = useState<userData>();
+  const [data, setData] = useState<User>();
   console.log("Profile data: ", data);
   useEffect(() => {
     const getData = async () => {
@@ -38,7 +31,7 @@ const profile = () => {
   }, []);
 
   const renderReviews = () => {
-    return data?.reviews.map((review) => {
+    return data?.Reviews.map((review) => {
       return (
         <li className="w-1/2 px-4 py-2" key={review._id}>
           <div className="shadow-md p-4 rounded-md">
@@ -62,16 +55,43 @@ const profile = () => {
       );
     });
   };
+  const renderFavs = () => {
+    return data?.Favorites.map((place) => {
+      return (
+        <li
+          onClick={() => redirectHandler(`/places/${place._id}`)}
+          key={place._id}
+        >
+          <h3>{place.Name}</h3>
+          <p>{place.School.CommonName}</p>
+        </li>
+      );
+    });
+  };
+
+  const redirectHandler = (path: string) => {
+    router.push(path);
+  };
   return (
     <>
       <Navbar />
       {data && (
         <>
           {data && <h1>{data.username}</h1>}
-          {data.reviews && (
+          {data.Reviews && (
             <>
-              <h2>Your Reviews: </h2>
-              <ul>{renderReviews()}</ul>
+              {data.Favorites.length ? (
+                <section>
+                  <h2>Your Favorites: </h2>
+                  <ul>{renderFavs()}</ul>
+                </section>
+              ) : (
+                <></>
+              )}
+              <section>
+                <h2>Your Reviews: </h2>
+                <ul>{renderReviews()}</ul>
+              </section>
             </>
           )}
         </>

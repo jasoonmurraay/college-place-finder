@@ -9,6 +9,7 @@ import mapboxgl from "mapbox-gl";
 import { Viewport } from "@/data/interfaces";
 // const Marker = mapboxgl.Marker;
 import { Marker } from "react-map-gl";
+import Head from "next/head";
 dotenv.config();
 
 type contextType = {
@@ -54,6 +55,11 @@ const schoolPage = (props: PropsType) => {
 
   return (
     <>
+      <Head>
+        <title aria-label={`Places associated with ${props.data.CommonName}`}>
+          {props.data.CommonName}
+        </title>
+      </Head>
       <Navbar />
       <main className="flex flex-col items-center">
         <div className="mt-5 h-1/2 max-h-80 w-2/4">

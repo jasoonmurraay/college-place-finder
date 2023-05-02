@@ -4,10 +4,9 @@ import { useState, useContext, useEffect } from "react";
 import { nlDict, ynDict, priceDict } from "@/data/interfaces";
 
 const ReviewComponent = (props: Review) => {
-  console.log("Review Props: ", props)
   const loginCtx = useContext(LoginContext);
   const [showFull, setShowFull] = useState(false);
-  
+
   return (
     <>
       <h3 className="text-lg font-semibold">{props.title}</h3>

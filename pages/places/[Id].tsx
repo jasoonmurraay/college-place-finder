@@ -1,6 +1,19 @@
 import Navbar from "@/components/Navbar";
-import { useState, useEffect, useCallback, useContext } from "react";
-import { Establishment, contextType, nlDict, priceDict, ynDict } from "@/data/interfaces";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  MouseEvent,
+} from "react";
+import {
+  Establishment,
+  User,
+  contextType,
+  nlDict,
+  priceDict,
+  ynDict,
+} from "@/data/interfaces";
 import axios from "axios";
 import { useRouter } from "next/router";
 import dotenv from "dotenv";
@@ -37,7 +50,6 @@ const PlaceId = (props: PropsType) => {
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const data = props.data;
-  console.log("Data: ", data);
   const latitude = data.Latitude;
   const longitude = data.Longitude;
   const [viewState, setViewState] = useState({
@@ -49,19 +61,10 @@ const PlaceId = (props: PropsType) => {
       latitude: latitude,
     },
   });
-  const [userId, setUserId] = useState<boolean|null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
-  // const [title, setTitle] = useState("");
-  // const [foodQuality, setFoodQuality] = useState(1);
-  // const [drinkQuality, setDrinkQuality] = useState(1);
-  // const [serviceQuality, setServiceQuality] = useState(1);
-  // const [goodForStudents, setGoodForStudents] = useState(false);
-  // const [goodForFamilies, setGoodForFamilies] = useState(false);
-  // const [forUnder21, setForUnder21] = useState(false);
-  // const [noiseLevel, setNoiseLevel] = useState(1);
-  // const [prices, setPrices] = useState(1);
-  // const [comments, setComments] = useState("");
+  const [fav, setfav] = useState<boolean>();
   const redirectHandler = (path: string) => {
     router.push(path);
   };
@@ -81,7 +84,7 @@ const PlaceId = (props: PropsType) => {
     const otherComments = formData.get("otherComments") as string;
 
     const newReview = {
-      author: userId,
+      author: user ? user._id : null,
       place: data._id,
       title,
       foodQuality,
@@ -108,7 +111,6 @@ const PlaceId = (props: PropsType) => {
     }
 
     try {
-      console.log("form data: ", newReview);
       const res = await axios.post("http://localhost:5000/reviews", newReview);
       console.log(res.data);
       setReviewing(false);
@@ -178,31 +180,37 @@ const PlaceId = (props: PropsType) => {
           },
         })
         .then((fetchData) => {
-          console.log("Fetch data: ", fetchData);
           if (fetchData && fetchData.status === 400) {
-            setUserId(null)
+            setUser(null);
           } else {
-          setUserId(fetchData.data._id);
-          if (fetchData.data.reviews.length) {
-            for (let i = 0; i < fetchData.data.reviews.length; i++) {
-              if (
-                fetchData.data.reviews[i].place &&
-                fetchData.data.reviews[i].place._id === data._id
-              ) {
-                setAlreadyReviewed(true);
+            setUser(fetchData.data);
+            if (fetchData.data.Reviews.length) {
+              for (let i = 0; i < fetchData.data.Reviews.length; i++) {
+                if (
+                  fetchData.data.Reviews[i].place &&
+                  fetchData.data.Reviews[i].place._id === data._id
+                ) {
+                  setAlreadyReviewed(true);
+                }
+              }
+            }
+            if (fetchData.data.Favorites.length) {
+              for (let i = 0; i < fetchData.data.Favorites.length; i++) {
+                if (fetchData.data.Favorites[i]._id === data._id) {
+                  setfav(true);
+                  break;
+                }
               }
             }
           }
-        }
-        }).catch(e => console.error("Fetch error: ", e));
+        })
+        .catch((e) => console.error("Fetch error: ", e));
     };
     getUser();
   }, [data, loginCtx.loginState?.isLoggedIn]);
 
   const renderReviews = () => {
     return data.Reviews.map((review) => {
-      console.log("Review: ", review);
-
       return (
         <li className="w-1/2 px-4 py-2" key={review._id}>
           <div className="shadow-md p-4 rounded-md">
@@ -286,6 +294,24 @@ const PlaceId = (props: PropsType) => {
     }
   };
 
+  const favoriteHandler = async (event: MouseEvent<HTMLButtonElement>) => {
+    if (!loginCtx.loginState?.id) {
+      router.push("/login");
+    } else {
+      await axios("http://localhost:5000/favorites", {
+        method: fav ? "put" : "post",
+        data: {
+          placeId: data._id,
+          userId: user ? user._id : null,
+        },
+      }).then((res) => {
+        if (res.status === 200) {
+          setfav(!fav);
+        }
+      });
+    }
+  };
+
   return (
     <>
       <Head>
@@ -318,7 +344,15 @@ const PlaceId = (props: PropsType) => {
                   </div>
                 </ReactMapGL>
               </div>
-              <h1 className="font-bold text-2xl">{data.Name}</h1>
+              <section className="flex items-center z-[1]">
+                <h1 className="font-bold text-2xl">{data.Name}</h1>
+                <button onClick={favoriteHandler}>
+                  <img
+                    className="h-5 w-5"
+                    src={fav ? `/full-heart.png` : `/empty-heart.png`}
+                  />
+                </button>
+              </section>
               {distance && (
                 <>
                   {distance < 1 && (
@@ -363,12 +397,14 @@ const PlaceId = (props: PropsType) => {
               {!alreadyReviewed && (
                 <>
                   {!reviewing && (
-                    <button onClick={() => {
-                      if (loginCtx.loginState && !loginCtx.loginState.id) {
-                        redirectHandler('/login')
-                      }
-                      setReviewing(true)
-                    }}>
+                    <button
+                      onClick={() => {
+                        if (loginCtx.loginState && !loginCtx.loginState.id) {
+                          redirectHandler("/login");
+                        }
+                        setReviewing(true);
+                      }}
+                    >
                       Create a Review
                     </button>
                   )}
@@ -492,11 +528,9 @@ const PlaceId = (props: PropsType) => {
 export default PlaceId;
 
 export async function getServerSideProps(context: contextType) {
-  console.log("Context params: ", context.params);
   const { data } = await axios.get(
     `http://localhost:5000/places/${context.params.Id}`
   );
-  console.log("Place Data: ", data);
   return {
     props: {
       data: data.place,

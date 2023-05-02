@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import { useState, useEffect, useCallback, useContext } from "react";
-import { Establishment, contextType } from "@/data/interfaces";
+import { Establishment, contextType, nlDict, priceDict, ynDict } from "@/data/interfaces";
 import axios from "axios";
 import { useRouter } from "next/router";
 import dotenv from "dotenv";
@@ -14,7 +14,7 @@ dotenv.config();
 import { Viewport } from "@/data/interfaces";
 import Head from "next/head";
 import ErrorMsg from "@/components/ErrorMsg";
-import Review from "@/components/Review";
+import ReviewComponent from "@/components/ReviewComponent";
 
 type PropsType = {
   data: Establishment;
@@ -49,7 +49,7 @@ const PlaceId = (props: PropsType) => {
       latitude: latitude,
     },
   });
-  const [userId, setUserId] = useState();
+  const [userId, setUserId] = useState<boolean|null>(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   // const [title, setTitle] = useState("");
@@ -179,6 +179,9 @@ const PlaceId = (props: PropsType) => {
         })
         .then((fetchData) => {
           console.log("Fetch data: ", fetchData);
+          if (fetchData && fetchData.status === 400) {
+            setUserId(null)
+          } else {
           setUserId(fetchData.data._id);
           if (fetchData.data.reviews.length) {
             for (let i = 0; i < fetchData.data.reviews.length; i++) {
@@ -190,31 +193,11 @@ const PlaceId = (props: PropsType) => {
               }
             }
           }
-        });
+        }
+        }).catch(e => console.error("Fetch error: ", e));
     };
     getUser();
   }, [data, loginCtx.loginState?.isLoggedIn]);
-
-  type Dict = {
-    [key: number]: string;
-  };
-
-  const nlDict: Dict = {
-    0: "Quiet",
-    1: "Moderate",
-    2: "Loud",
-  };
-
-  const priceDict: Dict = {
-    0: "$",
-    1: "$$",
-    2: "$$$",
-  };
-
-  const ynDict: Dict = {
-    1: "Yes",
-    0: "No",
-  };
 
   const renderReviews = () => {
     return data.Reviews.map((review) => {
@@ -223,7 +206,7 @@ const PlaceId = (props: PropsType) => {
       return (
         <li className="w-1/2 px-4 py-2" key={review._id}>
           <div className="shadow-md p-4 rounded-md">
-            <Review
+            <ReviewComponent
               _id={review._id}
               place={review.place}
               title={review.title}
@@ -380,7 +363,12 @@ const PlaceId = (props: PropsType) => {
               {!alreadyReviewed && (
                 <>
                   {!reviewing && (
-                    <button onClick={() => setReviewing(true)}>
+                    <button onClick={() => {
+                      if (loginCtx.loginState && !loginCtx.loginState.id) {
+                        redirectHandler('/login')
+                      }
+                      setReviewing(true)
+                    }}>
                       Create a Review
                     </button>
                   )}

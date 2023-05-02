@@ -20,7 +20,7 @@ const client = new MongoClient(MongoUrl, {
   },
 });
 
-app.use(cors());
+app.use(cors())
 
 async function run() {
   try {
@@ -64,7 +64,9 @@ app.post("/login", async (req, res) => {
         .status(200)
         .send({ message: "User logged in successfully", id: user._id });
     })
-    .catch((e) => console.error(e));
+    .catch((e) => {
+      return res.status(400).send(e)
+    });
 });
 
 app.post("/signup", async (req, res) => {
@@ -96,9 +98,13 @@ app.get("/profile", async (req, res) => {
   await client.connect();
   const db = client.db("Users");
   const users = db.collection("Users");
-  await users
+  const user = await users
     .findOne({ _id: new ObjectId(req.query.query) })
     .then((user) => {
+      console.log("User: ", user)
+      if (!user) {
+        return res.status(400).send("No user exists")
+      }
       return res.status(200).send({
         username: user.username,
         _id: user._id,
@@ -106,10 +112,7 @@ app.get("/profile", async (req, res) => {
         reviews: user.Reviews,
       });
     })
-    .catch((e) => {
-      console.log("e: ", e);
-      return res.status(401).send(e);
-    });
+  
 });
 
 app.get("/schools", async (req, res) => {

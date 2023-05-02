@@ -64,3 +64,24 @@ export type Viewport = {
   width: string;
   height: number;
 };
+
+export type Dict = {
+  [key: number]: string;
+};
+
+export const nlDict: Dict = {
+  0: "Quiet",
+  1: "Moderate",
+  2: "Loud",
+};
+
+export const priceDict: Dict = {
+  0: "$",
+  1: "$$",
+  2: "$$$",
+};
+
+export const ynDict: Dict = {
+  1: "Yes",
+  0: "No",
+};

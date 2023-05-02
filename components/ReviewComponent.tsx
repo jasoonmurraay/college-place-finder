@@ -1,30 +1,13 @@
 import { LoginContext } from "@/context/Login";
 import { Review } from "@/data/interfaces";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
+import { nlDict, ynDict, priceDict } from "@/data/interfaces";
 
-const Review = (props: Review) => {
+const ReviewComponent = (props: Review) => {
+  console.log("Review Props: ", props)
   const loginCtx = useContext(LoginContext);
   const [showFull, setShowFull] = useState(false);
-  type Dict = {
-    [key: number]: string;
-  };
-
-  const nlDict: Dict = {
-    0: "Quiet",
-    1: "Moderate",
-    2: "Loud",
-  };
-
-  const priceDict: Dict = {
-    0: "$",
-    1: "$$",
-    2: "$$$",
-  };
-
-  const ynDict: Dict = {
-    1: "Yes",
-    0: "No",
-  };
+  
   return (
     <>
       <h3 className="text-lg font-semibold">{props.title}</h3>
@@ -84,4 +67,4 @@ const Review = (props: Review) => {
     </>
   );
 };
-export default Review;
+export default ReviewComponent;

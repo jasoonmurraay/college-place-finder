@@ -4,14 +4,9 @@ import { LoginContext } from "@/context/Login";
 import { useContext, MouseEvent, useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 const inter = Inter({ subsets: ["latin"] });
-
-interface DataProps {
-  data: {
-    message: string;
-  };
-}
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -33,30 +28,28 @@ export default function Home() {
     router.push(path);
   };
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <Navbar />
-      <h1>College Bar Finder</h1>
-      {loginCtx && !loading && (
-        <>
-          {loginCtx.loginState?.isLoggedIn && (
-            <button onClick={logoutHandler}>Logout</button>
+    <>
+      <Head>
+        <title aria-label="Home Page for College Bar Finder">
+          College Bar Finder
+        </title>
+      </Head>
+      <main className={`flex flex-col ${inter.className}`}>
+        <Navbar />
+        <section className="flex flex-col items-center">
+          <h1 className="text-xl font-semibold">College Bar Finder</h1>
+          {loginCtx && !loading && (
+            <>
+              {loginCtx.loginState?.isLoggedIn && (
+                <button onClick={logoutHandler}>Logout</button>
+              )}
+              {!loginCtx.loginState?.isLoggedIn && (
+                <button onClick={() => redirectHandler("/login")}>Login</button>
+              )}
+            </>
           )}
-          {!loginCtx.loginState?.isLoggedIn && (
-            <button onClick={() => redirectHandler("/login")}>Login</button>
-          )}
-        </>
-      )}
-    </main>
+        </section>
+      </main>
+    </>
   );
 }
-
-// export async function getServerSideProps() {
-//   const { data } = await axios.get("http://localhost:5000");
-//   return {
-//     props: {
-//       data: data,
-//     },
-//   };
-// }

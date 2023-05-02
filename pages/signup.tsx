@@ -20,6 +20,14 @@ const signup = () => {
         })
         .then((data) => {
           console.log("Sign up data: ", data);
+          if (
+            window.history.length > 1 &&
+            document.referrer.indexOf(window.location.host) !== -1
+          ) {
+            router.back();
+          } else {
+            router.push(`/`);
+          }
         });
     }
   };

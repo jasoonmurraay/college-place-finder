@@ -26,11 +26,29 @@ const login = () => {
           console.log("Login data: ", data);
           if (data.data && loginCtx.login) {
             loginCtx.login(data.data.id);
-            router.push(`/`);
+            console.log("Window History length: ", window.history.length);
+            console.log(
+              "Document referrer: ",
+              document.referrer.indexOf(window.location.host)
+            );
+            if (
+              window.history.length > 1 &&
+              document.referrer.indexOf(window.location.host) !== -1
+            ) {
+              router.back();
+            } else {
+              router.push(`/`);
+            }
           }
         })
         .catch((e) => {
-          setError({ state: true, message: e.response.data });
+          console.error(e);
+          if (e.message === "Network Error") {
+            console.log("Network Error!")
+            setError({ state: true, message: e.message });
+          } else {
+            setError({ state: true, message: e.response });
+          }
         });
     }
   };
@@ -49,6 +67,7 @@ const login = () => {
   return (
     <>
       <Navbar />
+      {error.message && <ErrorMsg message={error.message} />}
       <h1 className="text-center mt-3">Login</h1>
       <form
         onSubmit={loginHandler}
@@ -100,7 +119,7 @@ const login = () => {
         <p>Don't have an account?</p>
         <a href="/signup">Sign up!</a>
       </div>
-      {error.message && <ErrorMsg message={error.message} />}
+     
     </>
   );
 };

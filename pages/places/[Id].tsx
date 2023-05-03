@@ -65,6 +65,10 @@ const PlaceId = (props: PropsType) => {
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [fav, setfav] = useState<boolean>();
+  const [formError, setFormError] = useState({
+    state: false,
+    message: ''
+  })
   const redirectHandler = (path: string) => {
     router.push(path);
   };
@@ -108,8 +112,12 @@ const PlaceId = (props: PropsType) => {
     ) {
       alert("Please fill out all fields.");
       return;
+    } else if (!Number.isInteger(foodQuality) || !Number.isInteger(drinkQuality) || !Number.isInteger(serviceQuality)) {
+      setFormError({state: true, message: 'Please make sure all number values are integers (i.e. 1, 2, 3, 4, or 5)'})
+      return
     }
 
+    
     try {
       const res = await axios.post("http://localhost:5000/reviews", newReview);
       console.log(res.data);
@@ -213,21 +221,10 @@ const PlaceId = (props: PropsType) => {
     return data.Reviews.map((review) => {
       return (
         <li className="w-1/2 px-4 py-2" key={review._id}>
-          <div className="shadow-md p-4 rounded-md">
+          <div className="h-full shadow-md p-4 rounded-md">
             <ReviewComponent
-              _id={review._id}
-              place={review.place}
-              title={review.title}
-              author={review.author}
-              foodQuality={review.foodQuality}
-              drinkQuality={review.drinkQuality}
-              serviceQuality={review.serviceQuality}
-              prices={review.prices}
-              noiseLevel={review.noiseLevel}
-              goodForFamilies={review.goodForFamilies}
-              goodForStudents={review.goodForStudents}
-              forUnder21={review.forUnder21}
-              otherComments={review.otherComments}
+              review = {review}
+              canEdit={review.author._id === loginCtx.loginState?.id}
             />
           </div>
         </li>
@@ -385,19 +382,10 @@ const PlaceId = (props: PropsType) => {
               {renderReviewAvgs()}
             </section>
             <section className="flex flex-col items-center">
-              {data.Reviews.length && <></>}
-              {data.Reviews.length ? (
-                <>
-                  <h2 className="text-lg font-semibold">Reviews</h2>
-                  <ul className="flex flex-row flex-wrap">{renderReviews()}</ul>
-                </>
-              ) : (
-                <p>Looks like there aren't any reviews yet!</p>
-              )}
-              {!alreadyReviewed && (
+            {!alreadyReviewed && (
                 <>
                   {!reviewing && (
-                    <button
+                    <button className="z-[1]"
                       onClick={() => {
                         if (loginCtx.loginState && !loginCtx.loginState.id) {
                           redirectHandler("/login");
@@ -409,41 +397,44 @@ const PlaceId = (props: PropsType) => {
                     </button>
                   )}
                   {reviewing && (
-                    <form onSubmit={handleSubmit}>
+                    <form noValidate className="z-[1]" onSubmit={handleSubmit}>
                       <div>
                         <label htmlFor="title">Review Title: </label>
                         <input type="text" id="title" name="title" />
                       </div>
                       <div>
-                        <label htmlFor="foodQuality">Food Quality:</label>
+                        <label htmlFor="foodQuality">Food Quality (out of 5):</label>
                         <input
                           type="number"
                           id="foodQuality"
                           name="foodQuality"
                           min="1"
                           max="5"
+                          step={1}
                           required
                         />
                       </div>
                       <div>
-                        <label htmlFor="drinkQuality">Drink Quality:</label>
+                        <label htmlFor="drinkQuality">Drink Quality (out of 5):</label>
                         <input
                           type="number"
                           id="drinkQuality"
                           name="drinkQuality"
                           min="1"
                           max="5"
+                          step={1}
                           required
                         />
                       </div>
                       <div>
-                        <label htmlFor="serviceQuality">Service Quality:</label>
+                        <label htmlFor="serviceQuality">Service Quality (out of 5):</label>
                         <input
                           type="number"
                           id="serviceQuality"
                           name="serviceQuality"
                           min="1"
                           max="5"
+                          step={1}
                           required
                         />
                       </div>
@@ -513,9 +504,23 @@ const PlaceId = (props: PropsType) => {
                       </button>
                       <button type="submit">Submit Review</button>
                     </form>
+                    
                   )}
+                  {formError.state && (
+                      <ErrorMsg message={formError.message} />
+                      )}
                 </>
               )}
+              {data.Reviews.length && <></>}
+              {data.Reviews.length ? (
+                <>
+                  <h2 className="text-lg font-semibold">Reviews</h2>
+                  <ul className="flex flex-row flex-wrap">{renderReviews()}</ul>
+                </>
+              ) : (
+                <p>Looks like there aren't any reviews yet!</p>
+              )}
+              
             </section>
           </>
         )}

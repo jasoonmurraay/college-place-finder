@@ -27,6 +27,11 @@ export interface Review {
   otherComments: string;
 }
 
+export interface ReviewCompProps {
+  review: Review,
+  canEdit: boolean,
+}
+
 export interface User {
   _id: string;
   username: string;

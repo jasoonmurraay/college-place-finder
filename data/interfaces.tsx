@@ -13,7 +13,7 @@ export interface Establishment {
 
 export interface Review {
   _id: string;
-  author: User;
+  author: User | null;
   place: Establishment;
   title: string;
   foodQuality: number;
@@ -28,8 +28,10 @@ export interface Review {
 }
 
 export interface ReviewCompProps {
-  review: Review,
-  canEdit: boolean,
+  review: Review;
+  canEdit: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 export interface User {

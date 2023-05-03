@@ -67,8 +67,8 @@ const PlaceId = (props: PropsType) => {
   const [fav, setfav] = useState<boolean>();
   const [formError, setFormError] = useState({
     state: false,
-    message: ''
-  })
+    message: "",
+  });
   const redirectHandler = (path: string) => {
     router.push(path);
   };
@@ -112,21 +112,35 @@ const PlaceId = (props: PropsType) => {
     ) {
       alert("Please fill out all fields.");
       return;
-    } else if (!Number.isInteger(foodQuality) || !Number.isInteger(drinkQuality) || !Number.isInteger(serviceQuality)) {
-      setFormError({state: true, message: 'Please make sure all number values are integers (i.e. 1, 2, 3, 4, or 5)'})
-      return
+    } else if (
+      !Number.isInteger(foodQuality) ||
+      !Number.isInteger(drinkQuality) ||
+      !Number.isInteger(serviceQuality)
+    ) {
+      setFormError({
+        state: true,
+        message:
+          "Please make sure all number values are integers (i.e. 1, 2, 3, 4, or 5)",
+      });
+      return;
     }
 
-    
     try {
       const res = await axios.post("http://localhost:5000/reviews", newReview);
       console.log(res.data);
-      setReviewing(false);
-      setAlreadyReviewed(true);
+      if (res.status === 200) {
+        setReviewing(false);
+        setAlreadyReviewed(true);
+        router.reload();
+      }
     } catch (err) {
       console.error(err);
       alert("An error occurred while submitting the review.");
     }
+  };
+
+  const reload = () => {
+    router.reload();
   };
 
   const handleViewportChange = useCallback(
@@ -223,8 +237,14 @@ const PlaceId = (props: PropsType) => {
         <li className="w-1/2 px-4 py-2" key={review._id}>
           <div className="h-full shadow-md p-4 rounded-md">
             <ReviewComponent
-              review = {review}
-              canEdit={review.author._id === loginCtx.loginState?.id}
+              onDelete={reload}
+              onEdit={reload}
+              review={review}
+              canEdit={
+                review.author
+                  ? review.author._id === loginCtx.loginState?.id
+                  : false
+              }
             />
           </div>
         </li>
@@ -382,10 +402,11 @@ const PlaceId = (props: PropsType) => {
               {renderReviewAvgs()}
             </section>
             <section className="flex flex-col items-center">
-            {!alreadyReviewed && (
+              {!alreadyReviewed && (
                 <>
                   {!reviewing && (
-                    <button className="z-[1]"
+                    <button
+                      className="z-[1]"
                       onClick={() => {
                         if (loginCtx.loginState && !loginCtx.loginState.id) {
                           redirectHandler("/login");
@@ -403,7 +424,9 @@ const PlaceId = (props: PropsType) => {
                         <input type="text" id="title" name="title" />
                       </div>
                       <div>
-                        <label htmlFor="foodQuality">Food Quality (out of 5):</label>
+                        <label htmlFor="foodQuality">
+                          Food Quality (out of 5):
+                        </label>
                         <input
                           type="number"
                           id="foodQuality"
@@ -415,7 +438,9 @@ const PlaceId = (props: PropsType) => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="drinkQuality">Drink Quality (out of 5):</label>
+                        <label htmlFor="drinkQuality">
+                          Drink Quality (out of 5):
+                        </label>
                         <input
                           type="number"
                           id="drinkQuality"
@@ -427,7 +452,9 @@ const PlaceId = (props: PropsType) => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="serviceQuality">Service Quality (out of 5):</label>
+                        <label htmlFor="serviceQuality">
+                          Service Quality (out of 5):
+                        </label>
                         <input
                           type="number"
                           id="serviceQuality"
@@ -504,11 +531,8 @@ const PlaceId = (props: PropsType) => {
                       </button>
                       <button type="submit">Submit Review</button>
                     </form>
-                    
                   )}
-                  {formError.state && (
-                      <ErrorMsg message={formError.message} />
-                      )}
+                  {formError.state && <ErrorMsg message={formError.message} />}
                 </>
               )}
               {data.Reviews.length && <></>}
@@ -520,7 +544,6 @@ const PlaceId = (props: PropsType) => {
               ) : (
                 <p>Looks like there aren't any reviews yet!</p>
               )}
-              
             </section>
           </>
         )}

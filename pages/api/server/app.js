@@ -108,6 +108,28 @@ app.get("/profile", async (req, res) => {
   });
 });
 
+app.delete("/profile", async (req, res) => {
+  await client.connect();
+  const userId = req.body.userId;
+  const reviews = client.db("Reviews").collection("Reviews");
+  const users = client.db("Users").collection("Users");
+  await reviews.updateMany(
+    { "author._id": new ObjectId(userId) },
+    {
+      $set: {
+        author: {
+          _id: null,
+          username: null,
+          password: null,
+          email: null,
+          Reviews: null,
+        },
+      },
+    }
+  );
+  await users.deleteOne({ _id: new ObjectId(userId) });
+});
+
 app.get("/schools", async (req, res) => {
   await client.connect();
   const schools = client.db("Schools").collection("Schools");
@@ -226,6 +248,107 @@ app.post("/reviews", async (req, res) => {
     res.status(200).send("Review uploaded!");
   } catch (err) {
     res.status(400).send(err);
+  }
+});
+
+app.patch("/reviews", async (req, res) => {
+  await client.connect();
+  try {
+    const clientReview = req.body;
+    const reviews = client.db("Reviews").collection("Reviews");
+    const users = client.db("Users").collection("Users");
+    const places = client.db("Places").collection("Places");
+    const place = await places.findOne({
+      _id: new ObjectId(clientReview.place),
+    });
+    const user = await users.findOne({
+      _id: new ObjectId(clientReview.author._id),
+    });
+    const reviewStructure = {
+      _id: new ObjectId(clientReview._id),
+      author: user,
+      title: clientReview.title,
+      foodQuality: clientReview.foodQuality,
+      drinkQuality: clientReview.drinkQuality,
+      serviceQuality: clientReview.serviceQuality,
+      goodForStudents: clientReview.goodForStudents,
+      goodForFamilies: clientReview.goodForFamilies,
+      forUnder21: clientReview.forUnder21,
+      noiseLevel: clientReview.noiseLevel,
+      prices: clientReview.prices,
+      otherComments: clientReview.otherComments,
+    };
+    await reviews.updateOne(
+      { _id: new ObjectId(clientReview._id) },
+      {
+        $set: reviewStructure,
+      }
+    );
+    const updatedReview = await reviews.findOne({
+      _id: new ObjectId(clientReview._id),
+    });
+    console.log("Updated review: ", updatedReview);
+    await users.updateOne(
+      {
+        _id: new ObjectId(clientReview.author),
+        "Reviews._id": new ObjectId(clientReview._id),
+      },
+      {
+        $set: {
+          "Reviews.$": reviewStructure,
+        },
+      }
+    );
+    await places.updateOne(
+      {
+        _id: new ObjectId(clientReview.place),
+        "Reviews._id": new ObjectId(clientReview._id),
+      },
+      {
+        $set: {
+          "Reviews.$": reviewStructure,
+        },
+      }
+    );
+    res.status(200).send({ message: "Successfully updated!" });
+  } catch (err) {
+    res.status(400).send({ message: "Failed to update", error: err });
+  }
+});
+
+app.delete("/reviews", async (req, res) => {
+  try {
+    await client.connect();
+    console.log("params: ", req.body);
+    const reviewId = req.body.reviewId;
+    const userId = req.body.userId;
+    const placeId = req.body.placeId;
+    const reviews = client.db("Reviews").collection("Reviews");
+    const users = client.db("Users").collection("Users");
+    const places = client.db("Places").collection("Places");
+    const dbReview = await reviews.findOne({ _id: new ObjectId(reviewId) });
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $pull: {
+          Reviews: { _id: new ObjectId(reviewId) },
+        },
+      }
+    );
+    await places.updateOne(
+      { _id: new ObjectId(placeId) },
+      {
+        $pull: {
+          Reviews: { _id: new ObjectId(reviewId) },
+        },
+      }
+    );
+    await reviews.deleteOne({ _id: new ObjectId(reviewId) });
+    res.status(200).send({ message: "Successfully deleted review!" });
+  } catch (err) {
+    res
+      .status(400)
+      .send({ message: "There was an error in deletion", error: err });
   }
 });
 

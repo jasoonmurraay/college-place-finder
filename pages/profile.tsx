@@ -36,19 +36,8 @@ const profile = () => {
         <li className="w-1/2 px-4 py-2" key={review._id}>
           <div className="shadow-md p-4 rounded-md">
             <ReviewComponent
-              _id={review._id}
-              place={review.place}
-              title={review.title}
-              author={review.author}
-              foodQuality={review.foodQuality}
-              drinkQuality={review.drinkQuality}
-              serviceQuality={review.serviceQuality}
-              prices={review.prices}
-              noiseLevel={review.noiseLevel}
-              goodForFamilies={review.goodForFamilies}
-              goodForStudents={review.goodForStudents}
-              forUnder21={review.forUnder21}
-              otherComments={review.otherComments}
+              review={review}
+              canEdit={true}
             />
           </div>
         </li>

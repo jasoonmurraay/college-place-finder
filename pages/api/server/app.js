@@ -67,7 +67,23 @@ app.post("/login", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  bcrypt
+  await client.connect();
+  const users = client.db("Users").collection("Users");
+  const foundUser = await users
+    .findOne({
+      $or: [{ username: req.body.username }, { email: req.body.email }],
+    })
+    .then((user) => {
+      if (user) {
+        return res
+          .status(401)
+          .send({ message: "A user with that username or email already exists" });
+      }
+    }).catch(err => {
+      return res.status(400).send({message: "An error has occurred.", error: err})
+    });
+  if (!foundUser) {
+    bcrypt
     .genSalt(Number(process.env.SALT_ROUNDS))
     .then((salt) => {
       return bcrypt.hash(req.body.password, salt);
@@ -81,13 +97,15 @@ app.post("/signup", async (req, res) => {
         Favorites: [],
       };
       await client.connect();
-      const db = client.db("Users");
-      const users = db.collection("Users");
+
       await users.insertOne(data);
+      return res.status(200).send({message: "Successfully signed up!"})
     })
     .catch((err) => {
-      res.status(400).send({ message: "An error has occurred", error: err });
+      return res.status(400).send({ message: "An error has occurred", error: err });
     });
+  }
+  
 });
 
 app.get("/profile", async (req, res) => {

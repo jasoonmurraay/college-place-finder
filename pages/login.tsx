@@ -42,12 +42,12 @@ const login = () => {
           }
         })
         .catch((e) => {
-          console.error(e);
+          console.error(e.response);
           if (e.message === "Network Error") {
             console.log("Network Error!")
             setError({ state: true, message: e.message });
           } else {
-            setError({ state: true, message: e.response });
+            setError({ state: true, message: e.response.data });
           }
         });
     }

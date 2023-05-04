@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   MouseEvent,
+  useRef,
 } from "react";
 import {
   Establishment,
@@ -21,19 +22,23 @@ import ReactMapGL, {
   AttributionControl,
   Marker,
   ViewStateChangeEvent,
+  LngLatBounds,
 } from "react-map-gl";
+import { WebMercatorViewport } from "viewport-mercator-project";
 import { LoginContext } from "@/context/Login";
 dotenv.config();
 import { Viewport } from "@/data/interfaces";
 import Head from "next/head";
 import ErrorMsg from "@/components/ErrorMsg";
 import ReviewComponent from "@/components/ReviewComponent";
+import mapboxgl from "mapbox-gl";
 
 type PropsType = {
-  data: Establishment;
+  data?: Establishment;
+  error?: string;
 };
 
-const PlaceId = (props: PropsType) => {
+const PlaceId = ({ data, error }: PropsType) => {
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
     height: typeof window !== "undefined" ? window.innerHeight : 0,
@@ -49,9 +54,8 @@ const PlaceId = (props: PropsType) => {
   }, [handleResize]);
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
-  const data = props.data;
-  const latitude = data.Latitude;
-  const longitude = data.Longitude;
+  const latitude = data?.Latitude;
+  const longitude = data?.Longitude;
   const [viewState, setViewState] = useState({
     latitude: latitude,
     longitude: longitude,
@@ -61,6 +65,7 @@ const PlaceId = (props: PropsType) => {
       latitude: latitude,
     },
   });
+  const [markerVisible, setMarkerVisible] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -89,7 +94,7 @@ const PlaceId = (props: PropsType) => {
 
     const newReview = {
       author: user ? user._id : null,
-      place: data._id,
+      place: data?._id,
       title,
       foodQuality,
       drinkQuality,
@@ -145,6 +150,30 @@ const PlaceId = (props: PropsType) => {
 
   const handleViewportChange = useCallback(
     (evt: ViewStateChangeEvent) => {
+      type viewEvent = {
+        width: number;
+        height: number;
+        latitude: number;
+        longitude: number;
+        zoom: number;
+      };
+      const newEvent: viewEvent = {
+        width: evt.target._containerWidth,
+        height: evt.target._containerHeight,
+        latitude: evt.viewState.latitude,
+        longitude: evt.viewState.longitude,
+        zoom: evt.viewState.zoom,
+      };
+      const viewportBounds = new WebMercatorViewport(newEvent).getBounds();
+      if (longitude && latitude) {
+        setMarkerVisible(
+          longitude >= viewportBounds[0][0] &&
+            longitude <= viewportBounds[1][0] &&
+            latitude >= viewportBounds[0][1] &&
+            latitude <= viewportBounds[1][1]
+        );
+      }
+
       setViewState({
         latitude: evt.viewState.latitude,
         longitude: evt.viewState.longitude,
@@ -157,6 +186,7 @@ const PlaceId = (props: PropsType) => {
     },
     [setViewState]
   );
+
   const [distance, setDistance] = useState<number | null>(null);
 
   useEffect(() => {
@@ -184,14 +214,16 @@ const PlaceId = (props: PropsType) => {
       return deg * (Math.PI / 180);
     }
 
-    setDistance(
-      getDistanceFromLatLonInMiles(
-        data.Latitude,
-        data.Longitude,
-        Number(data.School.latitude),
-        Number(data.School.longitude)
-      )
-    );
+    if (data) {
+      setDistance(
+        getDistanceFromLatLonInMiles(
+          data?.Latitude,
+          data?.Longitude,
+          Number(data?.School.latitude),
+          Number(data?.School.longitude)
+        )
+      );
+    }
 
     const getUser = async () => {
       const id = loginCtx.loginState?.id;
@@ -210,7 +242,7 @@ const PlaceId = (props: PropsType) => {
               for (let i = 0; i < fetchData.data.Reviews.length; i++) {
                 if (
                   fetchData.data.Reviews[i].place &&
-                  fetchData.data.Reviews[i].place._id === data._id
+                  fetchData.data.Reviews[i].place._id === data?._id
                 ) {
                   setAlreadyReviewed(true);
                 }
@@ -218,7 +250,7 @@ const PlaceId = (props: PropsType) => {
             }
             if (fetchData.data.Favorites.length) {
               for (let i = 0; i < fetchData.data.Favorites.length; i++) {
-                if (fetchData.data.Favorites[i]._id === data._id) {
+                if (fetchData.data.Favorites[i]._id === data?._id) {
                   setfav(true);
                   break;
                 }
@@ -232,9 +264,9 @@ const PlaceId = (props: PropsType) => {
   }, [data, loginCtx.loginState?.isLoggedIn]);
 
   const renderReviews = () => {
-    return data.Reviews.map((review) => {
+    return data?.Reviews.map((review) => {
       return (
-        <li className="w-1/2 px-4 py-2" key={review._id}>
+        <li className="w-4/5 max-w-96 px-4 py-2" key={review._id}>
           <div className="h-full shadow-md p-4 rounded-md">
             <ReviewComponent
               onDelete={reload}
@@ -261,53 +293,41 @@ const PlaceId = (props: PropsType) => {
     priceAvg = 0;
 
   const renderReviewAvgs = () => {
-    let length = data.Reviews.length;
-    for (let i = 0; i < length; i++) {
-      let review = data.Reviews[i];
-      foodAvg += review.foodQuality;
-      drinkAvg += review.drinkQuality;
-      serviceAvg += review.serviceQuality;
-      familyAvg += review.goodForFamilies;
-      studentAvg += review.goodForStudents;
-      noiseAvg += review.noiseLevel;
-      priceAvg += review.prices;
-    }
-    foodAvg /= length;
-    drinkAvg /= length;
-    serviceAvg /= length;
-    familyAvg /= length;
-    studentAvg /= length;
-    noiseAvg /= length;
-    priceAvg /= length;
+    if (data) {
+      let length = data?.Reviews.length;
+      for (let i = 0; i < length; i++) {
+        let review = data?.Reviews[i];
+        foodAvg += review.foodQuality;
+        drinkAvg += review.drinkQuality;
+        serviceAvg += review.serviceQuality;
+        familyAvg += review.goodForFamilies;
+        studentAvg += review.goodForStudents;
+        noiseAvg += review.noiseLevel;
+        priceAvg += review.prices;
+      }
+      foodAvg /= length;
+      drinkAvg /= length;
+      serviceAvg /= length;
+      familyAvg /= length;
+      studentAvg /= length;
+      noiseAvg /= length;
+      priceAvg /= length;
 
-    return (
-      <div className="flex flex-row flex-wrap w-1/2 items-center justify-center">
-        <p className="mx-4">Food: {foodAvg.toFixed(1)}/5</p>
-        <p className="mx-4">Drinks: {drinkAvg.toFixed(1)}/5</p>
-        <p className="mx-4">Service: {serviceAvg.toFixed(1)}/5</p>
-        <p className="mx-4">
-          Good for Families: {ynDict[Math.round(familyAvg)]}
-        </p>
-        <p className="mx-4">
-          Good for Students: {ynDict[Math.round(studentAvg)]}
-        </p>
-        <p className="mx-4">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
-        <p className="mx-4">Prices: {priceDict[Math.round(priceAvg)]}</p>
-      </div>
-    );
-  };
-
-  const xOffset = () => {
-    if (windowSize.width >= 1070) {
-      return 240;
-    } else if (windowSize.width < 1070 && windowSize.width >= 900) {
-      return windowSize.width / 4.5;
-    } else if (windowSize.width < 900 && windowSize.width >= 700) {
-      return windowSize.width / 4.6;
-    } else if (windowSize.width < 700 && windowSize.width >= 475) {
-      return windowSize.width / 4.7;
-    } else {
-      return windowSize.width / 5.5;
+      return (
+        <div className="flex flex-row flex-wrap w-1/2 items-center justify-center">
+          <p className="mx-4">Food: {foodAvg.toFixed(1)}/5</p>
+          <p className="mx-4">Drinks: {drinkAvg.toFixed(1)}/5</p>
+          <p className="mx-4">Service: {serviceAvg.toFixed(1)}/5</p>
+          <p className="mx-4">
+            Good for Families: {ynDict[Math.round(familyAvg)]}
+          </p>
+          <p className="mx-4">
+            Good for Students: {ynDict[Math.round(studentAvg)]}
+          </p>
+          <p className="mx-4">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
+          <p className="mx-4">Prices: {priceDict[Math.round(priceAvg)]}</p>
+        </div>
+      );
     }
   };
 
@@ -318,7 +338,7 @@ const PlaceId = (props: PropsType) => {
       await axios("http://localhost:5000/favorites", {
         method: fav ? "put" : "post",
         data: {
-          placeId: data._id,
+          placeId: data?._id,
           userId: user ? user._id : null,
         },
       }).then((res) => {
@@ -329,33 +349,45 @@ const PlaceId = (props: PropsType) => {
     }
   };
 
+  if (error) {
+    console.log("Error: ", error);
+  }
+
   return (
     <>
       <Head>
-        <title aria-label={`Information for ${data.Name}`}>{data.Name}</title>
+        <title aria-label={`Information for ${data?.Name}`}>{data?.Name}</title>
       </Head>
       <Navbar />
       <main className="mx-4 flex flex-col items-center">
+        {error && <ErrorMsg message={error} />}
         {data && (
           <>
-            <section className="mb-10 flex flex-col items-center">
-              <div className="mt-5 h-1/2 h-60 w-2/4">
+            <section className="mb-10 flex flex-col items-center w-full max-w-800 ">
+              <div className="mt-5 h-1/2 h-60 w-full sm:w-2/4 ">
                 <ReactMapGL
                   {...viewState}
                   mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
                   mapStyle="mapbox://styles/mapbox/streets-v12"
                   onMove={handleViewportChange}
                   attributionControl={false}
-                  style={{ height: "100%" }}
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                  }}
                 >
-                  <Marker
-                    longitude={longitude}
-                    latitude={latitude}
-                    offset={[xOffset(), -250]}
-                    anchor="center"
-                  >
-                    <img className="w-5 h-5" src="/map-pin.png" />
-                  </Marker>
+                  {markerVisible && (
+                    <Marker
+                      longitude={longitude}
+                      latitude={latitude}
+                      offset={[0, -250]}
+                      anchor="center"
+                      style={{ width: 20 }}
+                    >
+                      <img className="w-full h-full" src="/map-pin.png" />
+                    </Marker>
+                  )}
+
                   <div className="flex items-center">
                     {/* <AttributionControl /> */}
                   </div>
@@ -373,7 +405,7 @@ const PlaceId = (props: PropsType) => {
               {distance && (
                 <>
                   {distance < 1 && (
-                    <p>
+                    <p className="z-[1]">
                       {`<1 mile from`}{" "}
                       <span
                         onClick={() =>
@@ -398,8 +430,17 @@ const PlaceId = (props: PropsType) => {
                   )}
                 </>
               )}
-              <h2 className="font-semibold">Overall Review Averages: </h2>
-              {renderReviewAvgs()}
+              {data.Reviews.length ? (
+                <>
+                  <h2 className="font-semibold">
+                    Overall Review Averages ({data.Reviews.length}{" "}
+                    {data.Reviews.length === 1 ? "review" : "reviews"})
+                  </h2>
+                  {renderReviewAvgs()}
+                </>
+              ) : (
+                <div className="block w-2/4 h-2"></div>
+              )}
             </section>
             <section className="flex flex-col items-center">
               {!alreadyReviewed && (
@@ -535,11 +576,12 @@ const PlaceId = (props: PropsType) => {
                   {formError.state && <ErrorMsg message={formError.message} />}
                 </>
               )}
-              {data.Reviews.length && <></>}
               {data.Reviews.length ? (
                 <>
                   <h2 className="text-lg font-semibold">Reviews</h2>
-                  <ul className="flex flex-row flex-wrap">{renderReviews()}</ul>
+                  <ul className="flex flex-row flex-wrap justify-center">
+                    {renderReviews()}
+                  </ul>
                 </>
               ) : (
                 <p>Looks like there aren't any reviews yet!</p>
@@ -547,7 +589,6 @@ const PlaceId = (props: PropsType) => {
             </section>
           </>
         )}
-        {!data && <ErrorMsg message={"Could not load data."} />}
       </main>
     </>
   );
@@ -556,12 +597,24 @@ const PlaceId = (props: PropsType) => {
 export default PlaceId;
 
 export async function getServerSideProps(context: contextType) {
-  const { data } = await axios.get(
-    `http://localhost:5000/places/${context.params.Id}`
-  );
-  return {
-    props: {
-      data: data.place,
-    },
-  };
+  try {
+    const data = await axios
+      .get(`http://localhost:5000/places/${context.params.Id}`)
+      .then((data) => {
+        console.log("Place data: ", data.data.place);
+        return {
+          props: {
+            data: data.data.place,
+          },
+        };
+      });
+    return data;
+  } catch (err: any) {
+    return {
+      props: {
+        error:
+          "Could not find the place you were looking for.  There may be a network issue, or the place you are looking for does not exist.",
+      },
+    };
+  }
 }

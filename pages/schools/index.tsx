@@ -52,12 +52,11 @@ const schools = (props: SchoolsProps) => {
       <li
         onClick={() => redirectHandler(`/schools/${school._id}`)}
         key={school._id}
-        className="w-32 h-64 mx-3 my-3"
+        className="w-48 h-32 mx-3 my-3"
       >
         <Card
           header={school.CommonName}
           subheader={`${school.City}, ${school.State}`}
-          imgUrl={school.Logo ? school.Logo : null}
         />
       </li>
     ));

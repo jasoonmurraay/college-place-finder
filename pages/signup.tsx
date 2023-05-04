@@ -1,8 +1,9 @@
+import ErrorMsg from "@/components/ErrorMsg";
 import Navbar from "@/components/Navbar";
 import { LoginContext } from "@/context/Login";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useContext, useRef, useEffect } from "react";
+import { useContext, useRef, useEffect, useState } from "react";
 
 const signup = () => {
   const loginCtx = useContext(LoginContext);
@@ -10,6 +11,7 @@ const signup = () => {
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState({state: false, message: ''})
   const signupHandler = async () => {
     if (usernameRef.current && passwordRef.current && emailRef.current) {
       await axios
@@ -19,15 +21,18 @@ const signup = () => {
           email: emailRef.current ? emailRef.current.value : "",
         })
         .then((data) => {
-          console.log("Sign up data: ", data);
-          if (
-            window.history.length > 1 &&
-            document.referrer.indexOf(window.location.host) !== -1
-          ) {
-            router.back();
-          } else {
-            router.push(`/`);
-          }
+          console.log("Sign up data: ", data)
+            if (
+              window.history.length > 1 &&
+              document.referrer.indexOf(window.location.host) !== -1
+            ) {
+              router.back();
+            } else {
+              router.push(`/`);
+            } 
+          
+        }).catch(e => {
+          setError({state: true, message: e.response.data.message})
         });
     }
   };
@@ -41,8 +46,14 @@ const signup = () => {
   return (
     <>
       <Navbar />
+      {error.state && <ErrorMsg message={error.message} />}
       <h1 className="text-center mt-3">Sign Up</h1>
       <form
+      onChange={() => {
+        if (error.state) {
+          setError({state: false, message: ''})
+        }
+      }}
         onSubmit={signupHandler}
         className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
       >

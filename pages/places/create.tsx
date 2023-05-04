@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import Navbar from "@/components/Navbar";
 import { useRouter } from "next/router";
 import { School } from "@/data/interfaces";
 import { UsStates } from "@/data/states";
+import { LoginContext } from "@/context/Login";
 
 const CreatePlace = () => {
+  const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [schoolList, setSchoolList] = useState<School[]>();
@@ -83,6 +85,7 @@ const CreatePlace = () => {
         city,
         state: homeState,
         zip,
+        creator: loginCtx.loginState ? loginCtx.loginState.id : null,
       })
       .then((response) => {
         if (response.status === 200) {

@@ -2,22 +2,60 @@ import { LoginContext } from "@/context/Login";
 import { ReviewCompProps } from "@/data/interfaces";
 import { useState, useContext, useEffect } from "react";
 import { nlDict, ynDict, priceDict } from "@/data/interfaces";
-import { useRouter } from "next/router";
 import axios from "axios";
 
 const ReviewComponent = (props: ReviewCompProps) => {
-  const router = useRouter();
   const loginCtx = useContext(LoginContext);
   const [showFull, setShowFull] = useState(false);
   const [loading, setIsLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formValues, setFormValues] = useState(props.review);
+  const [timeString, setTimeString] = useState<string>();
 
   useEffect(() => {
+    const now = new Date();
+    const lastEdited = new Date(
+      props.review.timeStamp[props.review.timeStamp.length - 1]
+    );
+
+    const difference = now.getTime() - lastEdited.getTime();
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const week = 7 * day;
+    const month = 30 * day;
+    const year = 365 * day;
+
+    let timeUnit;
+    let timeValue;
+
+    if (difference >= year) {
+      timeValue = Math.floor(difference / year);
+      timeUnit = "year";
+    } else if (difference >= month) {
+      timeValue = Math.floor(difference / month);
+      timeUnit = "month";
+    } else if (difference >= week) {
+      timeValue = Math.floor(difference / week);
+      timeUnit = "week";
+    } else if (difference >= day) {
+      timeValue = Math.floor(difference / day);
+      timeUnit = "day";
+    } else if (difference >= hour) {
+      timeValue = Math.floor(difference / hour);
+      timeUnit = "hour";
+    } else {
+      timeValue = Math.floor(difference / minute);
+      timeUnit = "minute";
+    }
+
+    setTimeString(`${timeValue} ${timeUnit}${timeValue !== 1 ? "s" : ""} ago`);
     setIsLoading(false);
   }, []);
 
   const deleteHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     await axios
       .delete(`http://localhost:5000/reviews`, {
         data: {
@@ -61,6 +99,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
       noiseLevel,
       prices,
       otherComments,
+      timeStamp: props.review.timeStamp,
     };
     await axios
       .patch("http://localhost:5000/reviews", newReview)
@@ -126,12 +165,18 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   </>
                 )}
 
-                <p className="text-gray-600 italic">
+                <p className="text-gray-600">
                   <span className="font-semibold">Comments: </span>
                   <br />
                   {props.review.otherComments}
                 </p>
               </div>
+              <p className="text-gray-400 italic">
+                {props.review.timeStamp.length < 2
+                  ? "Posted: "
+                  : "Last Edited: "}{" "}
+                {timeString}
+              </p>
               <div className="flex flex-col justify-center">
                 <button onClick={() => setShowFull(!showFull)}>
                   {showFull ? "Show Less" : "Show More"}

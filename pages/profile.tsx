@@ -22,6 +22,12 @@ const profile = () => {
         })
         .then(async (data) => {
           setData(data.data);
+        })
+        .catch((err) => {
+          if (err.response.data === "No user exists" && loginCtx.logout) {
+            loginCtx.logout();
+            router.push("/");
+          }
         });
     };
     if (loginCtx.loginState) {
@@ -44,6 +50,9 @@ const profile = () => {
       })
       .then((res) => {
         if (res.status === 200) {
+          if (loginCtx.logout) {
+            loginCtx.logout();
+          }
         }
       });
   };

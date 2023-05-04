@@ -11,9 +11,14 @@ export interface Establishment {
   Reviews: Review[];
 }
 
+export interface ReviewAuthor {
+  _id: string;
+  username: string;
+}
+
 export interface Review {
   _id: string;
-  author: User | null;
+  author: ReviewAuthor | null;
   place: Establishment;
   title: string;
   foodQuality: number;
@@ -25,6 +30,7 @@ export interface Review {
   prices: number;
   drinkQuality: number;
   otherComments: string;
+  timeStamp: Date[];
 }
 
 export interface ReviewCompProps {
@@ -63,6 +69,11 @@ export type contextType = {
   params: {
     Id: string;
   };
+};
+
+export type placeContextType = {
+  data?: Establishment;
+  error?: string;
 };
 
 export type Viewport = {

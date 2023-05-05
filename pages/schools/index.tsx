@@ -5,6 +5,7 @@ import { School } from "@/data/interfaces";
 import Navbar from "@/components/Navbar";
 import Card from "@/components/Card";
 import Head from "next/head";
+import Footer from "@/components/Footer";
 
 interface SchoolsProps {
   schools: School[];
@@ -52,7 +53,7 @@ const schools = (props: SchoolsProps) => {
       <li
         onClick={() => redirectHandler(`/schools/${school._id}`)}
         key={school._id}
-        className="w-48 h-32 mx-3 my-3"
+        className="w-48 h-32 mx-3 my-3 transition-transform duration-300 ease-out hover:-translate-y-1"
       >
         <Card
           header={school.CommonName}
@@ -71,9 +72,9 @@ const schools = (props: SchoolsProps) => {
       </Head>
       <Navbar />
       <div className="mx-5">
-        <section>
+        <section className="mx-5 flex flex-col md:flex-row my-2 justify-between sticky top-32 z-[1]">
           <input
-            className="w-full"
+            className="w-full md:w-2/4 md:ml-0 p-3"
             type="text"
             placeholder="Search for schools"
             ref={queryRef}
@@ -83,6 +84,7 @@ const schools = (props: SchoolsProps) => {
             onChange={(e) => {
               setFilterValue(e.target.value);
             }}
+            className=""
           >
             <option value="">All Division 1 Schools</option>
             <option value="Southeastern Conference">SEC</option>
@@ -119,19 +121,12 @@ const schools = (props: SchoolsProps) => {
             <option value="America East Conference">America East</option>
             <option value="Independent">Independents</option>
           </select>
-          {/* <select
-            value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-          >
-            <option value="">All states</option>
-            <option value="AL">Alabama</option>
-            <option value="OH">Ohio</option>
-          </select> */}
         </section>
         <ul className="flex flex-wrap justify-center">
           {renderSchools(filtered)}
         </ul>
       </div>
+      <Footer />
     </>
   );
 };

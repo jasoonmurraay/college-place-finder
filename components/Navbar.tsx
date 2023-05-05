@@ -47,8 +47,10 @@ const Navbar = () => {
   return (
     <>
       {loginCtx && !isLoading && (
-        <nav className="flex items-center justify-between flex-wrap bg-teal-500 p-6">
-          <a href="/">College Bar Finder</a>
+        <nav className="flex items-center justify-between flex-wrap bg-blue-300 p-6 sticky top-0">
+          <a href="/">
+            <img className="h-20 w-20" src="/logo.png" />
+          </a>
           <div className="flex flex-col items-end">
             {showBurger && (
               <button onClick={() => setShowLinks(!showLinks)}>
@@ -63,7 +65,7 @@ const Navbar = () => {
               <ul
                 className={`flex ${
                   showBurger ? "flex-col my-2" : ""
-                } items-center px-3 py-2`}
+                } items-end text-right px-0 py-2`}
               >
                 <li
                   onClick={() => redirectHandler("/schools")}

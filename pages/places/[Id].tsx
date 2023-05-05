@@ -64,8 +64,13 @@ const PlaceId = ({ data, error }: PropsType) => {
       longitude: longitude,
       latitude: latitude,
     },
+    schoolMarker: {
+      longitude: Number(data?.School.longitude),
+      latitude: Number(data?.School.latitude),
+    },
   });
   const [markerVisible, setMarkerVisible] = useState(true);
+  const [schoolMarker, setSchoolMarker] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -172,6 +177,12 @@ const PlaceId = ({ data, error }: PropsType) => {
             latitude >= viewportBounds[0][1] &&
             latitude <= viewportBounds[1][1]
         );
+        setSchoolMarker(
+          Number(data.School.longitude) >= viewportBounds[0][0] &&
+            Number(data.School.longitude) <= viewportBounds[1][0] &&
+            Number(data.School.latitude) >= viewportBounds[0][1] &&
+            Number(data.School.latitude) <= viewportBounds[1][1]
+        );
       }
 
       setViewState({
@@ -181,6 +192,10 @@ const PlaceId = ({ data, error }: PropsType) => {
         marker: {
           longitude: viewState.marker.longitude,
           latitude: viewState.marker.latitude,
+        },
+        schoolMarker: {
+          longitude: viewState.schoolMarker.longitude,
+          latitude: viewState.schoolMarker.latitude,
         },
       });
     },
@@ -381,10 +396,21 @@ const PlaceId = ({ data, error }: PropsType) => {
                       longitude={longitude}
                       latitude={latitude}
                       offset={[0, -250]}
-                      anchor="center"
+                      anchor="bottom"
                       style={{ width: 20 }}
                     >
                       <img className="w-full h-full" src="/map-pin.png" />
+                    </Marker>
+                  )}
+                  {schoolMarker && (
+                    <Marker
+                      longitude={Number(data.School.longitude)}
+                      latitude={Number(data.School.latitude)}
+                      offset={[0, -250]}
+                      anchor="bottom"
+                      style={{ width: 20 }}
+                    >
+                      <img className="w-full h-full" src="/map-pin-red.png" />
                     </Marker>
                   )}
 

@@ -275,6 +275,24 @@ app.get("/places/:id", async (req, res) => {
     });
 });
 
+app.get("/reviews/:placeId", async (req, res) => {
+  console.log("Params: ", req.params);
+  const data = [];
+  try {
+    await client.connect();
+    const reviewDb = client.db("Reviews").collection("Reviews");
+    const reviewsCursor = reviewDb.find({
+      "place._id": new ObjectId(req.params.placeId),
+    });
+    const reviews = await reviewsCursor.toArray();
+    return res.status(200).send(reviews);
+  } catch (err) {
+    return res
+      .status(400)
+      .send({ message: "Could not find reviews for this place", error: err });
+  }
+});
+
 app.post("/reviews", async (req, res) => {
   try {
     const review = req.body;
@@ -306,11 +324,11 @@ app.post("/reviews", async (req, res) => {
       _id: newReview.insertedId,
     });
     await users.updateOne(
-      { _id: author._id },
+      { _id: new ObjectId(review.author) },
       { $push: { Reviews: updatednewReview } }
     );
     await places.updateOne(
-      { _id: place._id },
+      { _id: new ObjectId(review.place) },
       {
         $push: { Reviews: updatednewReview },
       }

@@ -29,6 +29,7 @@ import { LoginContext } from "@/context/Login";
 dotenv.config();
 import { Viewport } from "@/data/interfaces";
 import Head from "next/head";
+import Footer from "@/components/Footer";
 import ErrorMsg from "@/components/ErrorMsg";
 import ReviewComponent from "@/components/ReviewComponent";
 import mapboxgl from "mapbox-gl";
@@ -616,6 +617,7 @@ const PlaceId = ({ data, error }: PropsType) => {
           </>
         )}
       </main>
+      <Footer />
     </>
   );
 };

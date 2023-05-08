@@ -23,7 +23,6 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
         : false,
     id: typeof window !== "undefined" ? localStorage.getItem("cbUsername") : "",
   });
-  console.log("Login Context from context folder: ", loginState);
 
   // useEffect(() => {
   //   let localLogin =

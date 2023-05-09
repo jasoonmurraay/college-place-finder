@@ -420,7 +420,7 @@ const PlaceId = ({ data, error }: PropsType) => {
                   </div>
                 </ReactMapGL>
               </div>
-              <section className="flex items-center z-[1]">
+              <section className="flex items-center">
                 <h1 className="font-bold text-2xl">{data.Name}</h1>
                 <button onClick={favoriteHandler}>
                   <img

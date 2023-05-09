@@ -97,8 +97,6 @@ const schoolPage = (props: PropsType) => {
     setReviewDb(reviewData);
   };
 
-  console.log("Review DB: ", reviewDb);
-
   const renderEstablishments = () => {
     if (reviewDb) {
       type ScorePlace = {
@@ -113,7 +111,6 @@ const schoolPage = (props: PropsType) => {
           const reviewData = reviewDb.find(
             (data) => data.placeId === establishment._id
           );
-          console.log("REview Data: ", reviewData);
           if (reviewData) {
             const foodQuality =
               reviewData?.reviews.reduce(
@@ -286,8 +283,6 @@ const schoolPage = (props: PropsType) => {
         );
       });
   };
-
-  console.log("View state: ", viewState);
 
   return (
     <>

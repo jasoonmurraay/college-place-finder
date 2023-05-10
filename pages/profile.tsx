@@ -5,6 +5,8 @@ import axios from "axios";
 import { useEffect, useContext, useState } from "react";
 import { useRouter } from "next/router";
 import ReviewComponent from "@/components/ReviewComponent";
+import Footer from "@/components/Footer";
+import ErrorMsg from "@/components/ErrorMsg";
 
 const profile = () => {
   const router = useRouter();
@@ -58,21 +60,35 @@ const profile = () => {
   };
 
   const renderReviews = () => {
-    return data?.Reviews.map((review) => {
-      return (
-        <li className="w-1/2 px-4 py-2" key={review._id}>
-          <div className="shadow-md p-4 rounded-md">
-            <ReviewComponent
-              onDelete={reload}
-              onEdit={reload}
-              review={review}
-              canEdit={true}
-            />
-          </div>
-        </li>
-      );
+    const sortedReviews = data?.Reviews.sort((a: Review, b: Review) => {
+      const aTimestamp = new Date(a.timeStamp[a.timeStamp.length - 1]);
+      const bTimestamp = new Date(b.timeStamp[b.timeStamp.length - 1]);
+      if (aTimestamp instanceof Date && bTimestamp instanceof Date) {
+        return bTimestamp.getTime() - aTimestamp.getTime();
+      } else {
+        return 0;
+      }
     });
+    if (sortedReviews) {
+      return sortedReviews.map((review) => {
+        return (
+          <li className="md:w-64 px-4 py-2" key={review._id}>
+            <div className="shadow-md p-4 rounded-md">
+              <ReviewComponent
+                onDelete={reload}
+                onEdit={reload}
+                review={review}
+                canEdit={true}
+              />
+            </div>
+          </li>
+        );
+      });
+    } else {
+      return <ErrorMsg message="No reviews found" />;
+    }
   };
+
   const renderFavs = () => {
     return data?.Favorites.map((place) => {
       return (
@@ -93,51 +109,56 @@ const profile = () => {
   return (
     <>
       <Navbar />
-      {data && (
-        <>
-          {data && <h1>{data.username}</h1>}
-          {data.Favorites.length ? (
-            <section>
-              <h2>Your Favorites: </h2>
-              <ul>{renderFavs()}</ul>
-            </section>
-          ) : (
-            <></>
-          )}
-          {data.Reviews.length ? (
-            <>
+      <main className="flex flex-col items-center">
+        {data && (
+          <>
+            {data && <h1 className="text-lg font-bold">{data.username}</h1>}
+            {data.Favorites.length ? (
               <section>
-                <h2>Your Reviews: </h2>
-                <ul>{renderReviews()}</ul>
+                <h2>Your Favorites: </h2>
+                <ul>{renderFavs()}</ul>
               </section>
-            </>
-          ) : (
-            <></>
-          )}
-          <button
-            onClick={() => {
-              setStartDeleting(true);
-            }}
-          >
-            Delete Profile
-          </button>
-          {startDeleting && (
-            <div>
-              <h2>Are you sure you want to delete?</h2>
-              <p>
-                If you delete your profile, all reviews and places you have
-                created will stay on the site, but will no longer be associated
-                with your account. You will not be able to delete any of them at
-                that point.
-              </p>
-              <button onClick={() => setStartDeleting(false)}>
-                Don't delete my account!
-              </button>
-              <button onClick={deleteProfileHandler}>Delete my account</button>
-            </div>
-          )}
-        </>
-      )}
+            ) : (
+              <></>
+            )}
+            {data.Reviews.length ? (
+              <>
+                <section className="flex flex-col items-center">
+                  <h2>Your Reviews: </h2>
+                  <ul className="flex flex-wrap">{renderReviews()}</ul>
+                </section>
+              </>
+            ) : (
+              <></>
+            )}
+            <button
+              onClick={() => {
+                setStartDeleting(true);
+              }}
+            >
+              Delete Profile
+            </button>
+            {startDeleting && (
+              <div>
+                <h2>Are you sure you want to delete?</h2>
+                <p>
+                  If you delete your profile, all reviews and places you have
+                  created will stay on the site, but will no longer be
+                  associated with your account. You will not be able to delete
+                  any of them at that point.
+                </p>
+                <button onClick={() => setStartDeleting(false)}>
+                  Don't delete my account!
+                </button>
+                <button onClick={deleteProfileHandler}>
+                  Delete my account
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+      <Footer />
     </>
   );
 };

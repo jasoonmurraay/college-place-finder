@@ -8,8 +8,9 @@ interface LoginContextType {
   loginState: {
     isLoggedIn: boolean;
     id: string | null;
+    email: string | null;
   };
-  login: (id: string) => void;
+  login: (id: string, email: string) => void;
   logout: () => void;
 }
 
@@ -22,6 +23,7 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
         ? Boolean(localStorage.getItem("cbLoggedIn"))
         : false,
     id: typeof window !== "undefined" ? localStorage.getItem("cbUsername") : "",
+    email: typeof window !== "undefined" ? localStorage.getItem("email") : null,
   });
 
   // useEffect(() => {
@@ -37,12 +39,14 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
   //   }
   // }, []);
 
-  const login = (id: string) => {
+  const login = (id: string, email: string) => {
     localStorage.setItem("cbUsername", id);
     localStorage.setItem("cbLoggedIn", "true");
+    localStorage.setItem("email", email);
     setLoginState({
       isLoggedIn: true,
       id: id,
+      email: email,
     });
   };
 
@@ -52,7 +56,8 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
     localStorage.removeItem("cbLoggedIn");
     setLoginState({
       isLoggedIn: false,
-      id: "",
+      id: null,
+      email: null,
     });
   };
 

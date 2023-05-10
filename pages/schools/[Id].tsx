@@ -253,6 +253,7 @@ const schoolPage = (props: PropsType) => {
               setHoveredPlace(place._id);
             }}
             onMouseOut={() => setHoveredPlace(null)}
+            className="inline-block"
           >
             {hoveredPlace && hoveredPlace === place._id && (
               <Popup

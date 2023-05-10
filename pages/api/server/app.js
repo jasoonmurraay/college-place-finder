@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const emailjs = require("@emailjs/browser");
 
 require("dotenv").config();
 app.use(bodyParser.json());
@@ -57,9 +58,11 @@ app.post("/login", async (req, res) => {
       if (!passwordMatch) {
         return res.status(401).send("Invalid username or password");
       }
-      return res
-        .status(200)
-        .send({ message: "User logged in successfully", id: user._id });
+      return res.status(200).send({
+        message: "User logged in successfully",
+        id: user._id,
+        email: user.email,
+      });
     })
     .catch((e) => {
       return res.status(400).send(e);
@@ -117,6 +120,30 @@ app.post("/signup", async (req, res) => {
     return res.status(400).send({ message: "Could not sign up", error: err });
   }
 });
+
+// app.post("/contact", (req, res) => {
+//   const { message, from_name } = req.body;
+//   const params = {
+//     message,
+//     from_name,
+//   };
+//   emailjs
+//     .send(
+//       process.env.NEXT_PUBLIC_EMAIL_SERVICE_ID,
+//       process.env.NEXT_PUBLIC_EMAIL_TEMPLATE_ID,
+//       params,
+//       process.env.NEXT_PUBLIC_EMAIL_KEY
+//     )
+//     .then(() => {
+//       return res.status(200).send({ message: "Contact sent successfully!" });
+//     })
+//     .catch((err) => {
+//       return res.status(400).send({
+//         message: "There was an error sending contact info",
+//         error: err,
+//       });
+//     });
+// });
 
 app.get("/profile", async (req, res) => {
   try {

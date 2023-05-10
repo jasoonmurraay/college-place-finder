@@ -25,7 +25,7 @@ const login = () => {
           setError({ state: false, message: null });
           console.log("Login data: ", data);
           if (data.data && loginCtx.login) {
-            loginCtx.login(data.data.id);
+            loginCtx.login(data.data.id, data.data.email);
             console.log("Window History length: ", window.history.length);
             console.log(
               "Document referrer: ",
@@ -44,7 +44,7 @@ const login = () => {
         .catch((e) => {
           console.error(e.response);
           if (e.message === "Network Error") {
-            console.log("Network Error!")
+            console.log("Network Error!");
             setError({ state: true, message: e.message });
           } else {
             setError({ state: true, message: e.response.data });
@@ -119,7 +119,6 @@ const login = () => {
         <p>Don't have an account?</p>
         <a href="/signup">Sign up!</a>
       </div>
-     
     </>
   );
 };

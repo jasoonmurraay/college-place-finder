@@ -331,17 +331,13 @@ const PlaceId = ({ data, error }: PropsType) => {
 
       return (
         <div className="flex flex-row flex-wrap w-1/2 items-center justify-center">
-          <p className="mx-4">Food: {foodAvg.toFixed(1)}/5</p>
-          <p className="mx-4">Drinks: {drinkAvg.toFixed(1)}/5</p>
-          <p className="mx-4">Service: {serviceAvg.toFixed(1)}/5</p>
-          <p className="mx-4">
-            Good for Families: {ynDict[Math.round(familyAvg)]}
-          </p>
-          <p className="mx-4">
-            Good for Students: {ynDict[Math.round(studentAvg)]}
-          </p>
-          <p className="mx-4">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
-          <p className="mx-4">Prices: {priceDict[Math.round(priceAvg)]}</p>
+          <p className="mx-0">Food: {foodAvg.toFixed(1)}/5</p>
+          <p className="mx-0">Drinks: {drinkAvg.toFixed(1)}/5</p>
+          <p className="mx-0">Service: {serviceAvg.toFixed(1)}/5</p>
+          <p className="mx-0">For Families: {ynDict[Math.round(familyAvg)]}</p>
+          <p className="mx-0">For Students: {ynDict[Math.round(studentAvg)]}</p>
+          <p className="mx-0">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
+          <p className="mx-0">Prices: {priceDict[Math.round(priceAvg)]}</p>
         </div>
       );
     }
@@ -420,7 +416,7 @@ const PlaceId = ({ data, error }: PropsType) => {
                   </div>
                 </ReactMapGL>
               </div>
-              <section className="flex items-center">
+              <section className="flex items-center z-[1]">
                 <h1 className="font-bold text-2xl">{data.Name}</h1>
                 <button onClick={favoriteHandler}>
                   <img
@@ -606,7 +602,7 @@ const PlaceId = ({ data, error }: PropsType) => {
               {data.Reviews.length ? (
                 <>
                   <h2 className="text-lg font-semibold">Reviews</h2>
-                  <ul className="flex flex-row flex-wrap justify-center">
+                  <ul className="flex flex-row flex-wrap justify-center mb-10">
                     {renderReviews()}
                   </ul>
                 </>

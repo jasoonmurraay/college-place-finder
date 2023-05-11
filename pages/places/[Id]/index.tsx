@@ -40,6 +40,7 @@ type PropsType = {
 };
 
 const PlaceId = ({ data, error }: PropsType) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
     height: typeof window !== "undefined" ? window.innerHeight : 0,
@@ -416,14 +417,26 @@ const PlaceId = ({ data, error }: PropsType) => {
                   </div>
                 </ReactMapGL>
               </div>
-              <section className="flex items-center z-[1]">
-                <h1 className="font-bold text-2xl">{data.Name}</h1>
-                <button onClick={favoriteHandler}>
-                  <img
-                    className="h-5 w-5"
-                    src={fav ? `/full-heart.png` : `/empty-heart.png`}
-                  />
-                </button>
+              <section className="flex flex-col items-center z-[1]">
+                <div className="flex">
+                  <h1 className="font-bold text-2xl">{data.Name}</h1>
+                  <button onClick={favoriteHandler}>
+                    <img
+                      className="h-5 w-5"
+                      src={fav ? `/full-heart.png` : `/empty-heart.png`}
+                    />
+                  </button>
+                </div>
+                {loginCtx.loginState &&
+                  data.Creator._id === loginCtx.loginState.id && (
+                    <button
+                      onClick={() =>
+                        redirectHandler(`/places/${data._id}/edit`)
+                      }
+                    >
+                      Edit Place
+                    </button>
+                  )}
               </section>
               {distance && (
                 <>
@@ -621,6 +634,7 @@ const PlaceId = ({ data, error }: PropsType) => {
 export default PlaceId;
 
 export async function getServerSideProps(context: contextType) {
+  console.log("context: ", context.params);
   try {
     const data = await axios
       .get(`http://localhost:5000/places/${context.params.Id}`)

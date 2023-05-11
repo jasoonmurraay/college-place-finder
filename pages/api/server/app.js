@@ -12,6 +12,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const MongoUrl = process.env.MONGO_URL;
+const token = process.env.HIGHER_SCOPE_MAPBOX_TOKEN;
 
 const client = new MongoClient(MongoUrl, {
   serverApi: {
@@ -228,7 +229,7 @@ app.get("/schools/:id", async (req, res) => {
 app.post("/places", async (req, res) => {
   const { address, city, state, zip, school, name, creator } = req.body;
   const fullAddress = `${address} ${city} ${state} ${zip}`;
-  const token = process.env.HIGHER_SCOPE_MAPBOX_TOKEN;
+
   await axios
     .get(
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${fullAddress}.json?proximity=ip&access_token=${token}`
@@ -238,16 +239,19 @@ app.post("/places", async (req, res) => {
       await client.connect();
       const places = client.db("Places").collection("Places");
       const existingPlace = await places.findOne({
-        Latitude: coordinates[0],
-        Longitude: coordinates[1],
+        Latitude: coordinates[1],
+        Longitude: coordinates[0],
       });
       if (!existingPlace) {
+        console.log("Place does not exist already!");
         const schools = client.db("Schools").collection("Schools");
+        console.log("School: ", school);
         const currSchool = await schools.findOne({
           _id: new ObjectId(school._id),
         });
         const users = client.db("Users").collection("Users");
         const user = await users.findOne({ _id: new ObjectId(creator) });
+        console.log("User: ", user);
         const newPlace = await places.insertOne({
           Name: name,
           School: currSchool,
@@ -271,14 +275,67 @@ app.post("/places", async (req, res) => {
           { _id: currSchool._id },
           { $push: { establishments: updatedPlace } }
         );
-        res.status(200).send(newPlace);
+        return res.status(200).send(newPlace);
       } else {
-        res.status(400).send({ message: "This place already exists" });
+        return res.status(400).send({ message: "This place already exists" });
       }
     })
     .catch((err) => {
-      res.status(400).send({ message: "Could not add this place", error: err });
+      return res
+        .status(400)
+        .send({ message: "Could not add this place", error: err });
     });
+});
+
+app.patch("/places/:id", async (req, res) => {
+  const id = req.params.id;
+  const { address, city, state, zip, school, name, creator, submissionId } =
+    req.body;
+  const fullAddress = `${address} ${city} ${state} ${zip}`;
+  if (!submissionId || submissionId !== creator._id) {
+    return res
+      .status(403)
+      .send({ Message: "You are not authorized to proceed with this action." });
+  }
+  try {
+    await client.connect();
+    const places = client.db("Places").collection("Places");
+    const existingPlace = await places.findOne({ _id: new ObjectId(id) });
+    console.log("Existing place: ", existingPlace);
+    let newCoordinates = null;
+    if (fullAddress !== existingPlace.Address) {
+      await axios
+        .get(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${fullAddress}.json?proximity=ip&access_token=${token}`
+        )
+        .then((data) => {
+          newCoordinates = data.data.features[0].geometry.coordinates;
+        });
+      console.log("new coordinates: ", newCoordinates);
+    }
+    await places.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          Name: name,
+          School: school,
+          Address: address,
+          City: city,
+          State: state,
+          Zip: zip,
+          Latitude: newCoordinates ? newCoordinates[1] : existingPlace.Latitude,
+          Longitude: newCoordinates
+            ? newCoordinates[0]
+            : existingPlace.Longitude,
+        },
+      }
+    );
+    return res.status(200).send({ message: "Successfully updated!" });
+  } catch (e) {
+    return res
+      .status(400)
+      .send({ message: "The place could not be updated.", error: e });
+  }
 });
 
 app.get("/places/:id", async (req, res) => {

@@ -7,6 +7,7 @@ export interface Establishment {
   Zip: string;
   Latitude: number;
   Longitude: number;
+  Creator: ReviewAuthor;
   School: School;
   Reviews: Review[];
 }

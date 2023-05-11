@@ -185,10 +185,10 @@ const schoolPage = (props: PropsType) => {
   };
 
   const redirectHandler = (path: string, id: string | null) => {
-    router.push({
-      pathname: path,
-      query: { id: id },
-    });
+    let insert = id
+      ? { pathname: path, query: { id: id } }
+      : { pathname: path };
+    router.push(insert);
   };
 
   type viewEvent = {

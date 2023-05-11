@@ -20,7 +20,6 @@ const schools = (props: SchoolsProps) => {
     conference ? String(conference) : null
   );
   const queryRef = useRef<any>();
-  console.log("Render");
 
   useEffect(() => {
     let filteredSchools = props.schools;
@@ -40,10 +39,31 @@ const schools = (props: SchoolsProps) => {
         );
       }
     }
-    router.push({
-      pathname: router.pathname,
-      query: { conference: filterValue, name: query },
-    });
+
+    let pushData;
+
+    if (!filterValue && !query) {
+      pushData = {
+        pathname: router.pathname,
+      };
+    } else if (!filterValue) {
+      pushData = {
+        pathname: router.pathname,
+        query: { name: query },
+      };
+    } else if (!query) {
+      pushData = {
+        pathname: router.pathname,
+        query: { conference: filterValue },
+      };
+    } else {
+      pushData = {
+        pathname: router.pathname,
+        query: { conference: filterValue, name: query },
+      };
+    }
+
+    router.push(pushData);
 
     setFiltered(filteredSchools);
   }, [query, filterValue]);
@@ -90,7 +110,7 @@ const schools = (props: SchoolsProps) => {
     <>
       <Head>
         <title aria-label={`Page for ${router.query.conference} Schools`}>
-          {router.query.conference === "Division 1"
+          {!router.query.conference
             ? "All Schools"
             : `${router.query.conference}`}
         </title>
@@ -104,235 +124,50 @@ const schools = (props: SchoolsProps) => {
             placeholder={query ? query : "Search for schools"}
             ref={queryRef}
             onChange={queryHandler}
+            value={query ? query : ""}
           />
           <select
+            value={router.query.conference}
             onChange={(e) => {
               setFilterValue(e.target.value);
               router.query.conference = e.target.value;
             }}
             className=""
-            defaultValue={
-              router.query.conference ? router.query.conference : ""
-            }
           >
-            <option
-              selected={router.query.conference === "Division 1"}
-              value="Division 1"
-            >
-              All Division 1 Schools
-            </option>
-            <option
-              selected={router.query.conference === "Southeastern Conference"}
-              value="Southeastern Conference"
-            >
-              SEC
-            </option>
-            <option
-              selected={router.query.conference === "Big Ten Conference"}
-              value="Big Ten Conference"
-            >
-              Big Ten
-            </option>
-            <option
-              selected={router.query.conference === "Big 12 Conference"}
-              value="Big 12 Conference"
-            >
-              Big XII
-            </option>
-            <option
-              selected={router.query.conference === "Atlantic Coast Conference"}
-              value="Atlantic Coast Conference"
-            >
-              ACC
-            </option>
-            <option
-              selected={router.query.conference === "Pac-12 Conference"}
-              value="Pac-12 Conference"
-            >
-              PAC-12
-            </option>
-            <option
-              selected={
-                router.query.conference === "American Athletic Conference"
-              }
-              value="American Athletic Conference"
-            >
-              American
-            </option>
-            <option
-              selected={router.query.conference === "Mountain West Conference"}
-              value="Mountain West Conference"
-            >
-              Mountain West
-            </option>
-            <option
-              selected={router.query.conference === "Sun Belt Conference"}
-              value="Sun Belt Conference"
-            >
-              Sun Belt
-            </option>
-            <option
-              selected={router.query.conference === "Conference USA"}
-              value="Conference USA"
-            >
-              C-USA
-            </option>
-            <option
-              selected={router.query.conference === "Mid-American Conference"}
-              value="Mid-American Conference"
-            >
-              MAC
-            </option>
-            <option
-              selected={router.query.conference === "Big East Conference"}
-              value="Big East Conference"
-            >
-              Big East
-            </option>
-            <option
-              selected={router.query.conference === "West Coast Conference"}
-              value="West Coast Conference"
-            >
-              WCC
-            </option>
-            <option
-              selected={router.query.conference === "Big Sky Conference"}
-              value="Big Sky Conference"
-            >
-              Big Sky
-            </option>
-            <option
-              selected={
-                router.query.conference === "Missouri Valley Conference"
-              }
-              value="Missouri Valley Conference"
-            >
-              Missouri Valley
-            </option>
-            <option
-              selected={router.query.conference === "Ohio Valley Conference"}
-              value="Ohio Valley Conference"
-            >
-              OVC
-            </option>
-            <option
-              selected={router.query.conference === "Ivy League"}
-              value="Ivy League"
-            >
-              Ivy League
-            </option>
-            <option
-              selected={
-                router.query.conference === "Western Athletic Conference"
-              }
-              value="Western Athletic Conference"
-            >
-              WAC
-            </option>
-            <option
-              selected={router.query.conference === "Northeast Conference"}
-              value="Northeast Conference"
-            >
-              NEC
-            </option>
-            <option
-              selected={router.query.conference === "Atlantic 10 Conference"}
-              value="Atlantic 10 Conference"
-            >
-              A-10
-            </option>
-            <option
-              selected={router.query.conference === "Horizon League"}
-              value="Horizon League"
-            >
-              Horizon
-            </option>
-            <option
-              selected={
-                router.query.conference === "Southwestern Athletic Conference"
-              }
-              value="Southwestern Athletic Conference"
-            >
-              SWAC
-            </option>
-            <option
-              selected={router.query.conference === "ASUN Conference"}
-              value="ASUN Conference"
-            >
-              ASUN
-            </option>
-            <option
-              selected={router.query.conference === "Southern Conference"}
-              value="Southern Conference"
-            >
-              SoCon
-            </option>
-            <option
-              selected={router.query.conference === "Southland Conference"}
-              value="Southland Conference"
-            >
-              Southland
-            </option>
-            <option
-              selected={router.query.conference === "Big South Conference"}
-              value="Big South Conference"
-            >
-              Big South
-            </option>
-            <option
-              selected={
-                router.query.conference === "Metro Atlantic Athletic Conference"
-              }
-              value="Metro Atlantic Athletic Conference"
-            >
-              MAAC
-            </option>
-            <option
-              selected={
-                router.query.conference === "Mid-Eastern Athletic Conference"
-              }
-              value="Mid-Eastern Athletic Conference"
-            >
-              MEAC
-            </option>
-            <option
-              selected={router.query.conference === "Patriot League"}
-              value="Patriot League"
-            >
-              Patriot League
-            </option>
-            <option
-              selected={router.query.conference === "Big West Conference"}
-              value="Big West Conference"
-            >
-              Big West
-            </option>
-            <option
-              selected={router.query.conference === "Summit League"}
-              value="Summit League"
-            >
-              Summit League
-            </option>
-            <option
-              selected={
-                router.query.conference === "Colonial Athletic Association"
-              }
-              value="Colonial Athletic Association"
-            >
-              CAA
-            </option>
-            <option
-              selected={router.query.conference === "America East Conference"}
-              value="America East Conference"
-            >
-              America East
-            </option>
-            <option
-              selected={router.query.conference === "Independent"}
-              value="Independent"
-            >
-              Independents
-            </option>
+            <option value="">All Division 1 Schools</option>
+            <option value="Southeastern Conference">SEC</option>
+            <option value="Big Ten Conference">Big Ten</option>
+            <option value="Big 12 Conference">Big XII</option>
+            <option value="Atlantic Coast Conference">ACC</option>
+            <option value="Pac-12 Conference">PAC-12</option>
+            <option value="American Athletic Conference">American</option>
+            <option value="Mountain West Conference">Mountain West</option>
+            <option value="Sun Belt Conference">Sun Belt</option>
+            <option value="Conference USA">C-USA</option>
+            <option value="Mid-American Conference">MAC</option>
+            <option value="Big East Conference">Big East</option>
+            <option value="West Coast Conference">WCC</option>
+            <option value="Big Sky Conference">Big Sky</option>
+            <option value="Missouri Valley Conference">Missouri Valley</option>
+            <option value="Ohio Valley Conference">OVC</option>
+            <option value="Ivy League">Ivy League</option>
+            <option value="Western Athletic Conference">WAC</option>
+            <option value="Northeast Conference">NEC</option>
+            <option value="Atlantic 10 Conference">A-10</option>
+            <option value="Horizon League">Horizon</option>
+            <option value="Southwestern Athletic Conference">SWAC</option>
+            <option value="ASUN Conference">ASUN</option>
+            <option value="Southern Conference">SoCon</option>
+            <option value="Southland Conference">Southland</option>
+            <option value="Big South Conference">Big South</option>
+            <option value="Metro Atlantic Athletic Conference">MAAC</option>
+            <option value="Mid-Eastern Athletic Conference">MEAC</option>
+            <option value="Patriot League">Patriot League</option>
+            <option value="Big West Conference">Big West</option>
+            <option value="Summit League">Summit League</option>
+            <option value="Colonial Athletic Association">CAA</option>
+            <option value="America East Conference">America East</option>
+            <option value="Independent">Independents</option>
           </select>
         </section>
         <ul className="flex flex-wrap justify-center">

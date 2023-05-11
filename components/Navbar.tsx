@@ -55,7 +55,7 @@ const Navbar = () => {
             {showBurger && (
               <button onClick={() => setShowLinks(!showLinks)}>
                 <img
-                  className="h-5 w-5"
+                  className="h-5 w-5 transition-transform duration-300 ease-out hover:-translate-y-1"
                   src="/Hamburger.png"
                   alt="Menu toggle button"
                 />

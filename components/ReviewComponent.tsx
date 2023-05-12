@@ -8,115 +8,137 @@ const ReviewComponent = (props: ReviewCompProps) => {
   const loginCtx = useContext(LoginContext);
   const [showFull, setShowFull] = useState(false);
   const [loading, setIsLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [formValues, setFormValues] = useState(props.review);
+  const [editing, setEditing] = useState(props.isEditing);
+  const [formValues, setFormValues] = useState(
+    props.review
+      ? props.review
+      : {
+          foodQuality: 0,
+          drinkQuality: 0,
+          hasFood: false,
+          hasAlcohol: false,
+          forUnder21: 0,
+          goodForFamilies: 0,
+          goodForStudents: 0,
+          prices: 0,
+          noiseLevel: 0,
+          serviceQuality: 0,
+          otherComments: "",
+          title: "",
+        }
+  );
   const [timeString, setTimeString] = useState<string>();
+  console.log("Review props: ", props);
 
   useEffect(() => {
-    const now = new Date();
-    const lastEdited = new Date(
-      props.review.timeStamp[props.review.timeStamp.length - 1]
-    );
+    if (props.review) {
+      const now = new Date();
+      const lastEdited = new Date(
+        props.review.timeStamp[props.review.timeStamp.length - 1]
+      );
 
-    const difference = now.getTime() - lastEdited.getTime();
+      const difference = now.getTime() - lastEdited.getTime();
 
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-    const week = 7 * day;
-    const month = 30 * day;
-    const year = 365 * day;
+      const minute = 60 * 1000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+      const week = 7 * day;
+      const month = 30 * day;
+      const year = 365 * day;
 
-    let timeUnit;
-    let timeValue;
+      let timeUnit;
+      let timeValue;
 
-    if (difference >= year) {
-      timeValue = Math.floor(difference / year);
-      timeUnit = "year";
-    } else if (difference >= month) {
-      timeValue = Math.floor(difference / month);
-      timeUnit = "month";
-    } else if (difference >= week) {
-      timeValue = Math.floor(difference / week);
-      timeUnit = "week";
-    } else if (difference >= day) {
-      timeValue = Math.floor(difference / day);
-      timeUnit = "day";
-    } else if (difference >= hour) {
-      timeValue = Math.floor(difference / hour);
-      timeUnit = "hour";
-    } else {
-      timeValue = Math.floor(difference / minute);
-      timeUnit = "minute";
+      if (difference >= year) {
+        timeValue = Math.floor(difference / year);
+        timeUnit = "year";
+      } else if (difference >= month) {
+        timeValue = Math.floor(difference / month);
+        timeUnit = "month";
+      } else if (difference >= week) {
+        timeValue = Math.floor(difference / week);
+        timeUnit = "week";
+      } else if (difference >= day) {
+        timeValue = Math.floor(difference / day);
+        timeUnit = "day";
+      } else if (difference >= hour) {
+        timeValue = Math.floor(difference / hour);
+        timeUnit = "hour";
+      } else {
+        timeValue = Math.floor(difference / minute);
+        timeUnit = "minute";
+      }
+
+      setTimeString(
+        `${timeValue} ${timeUnit}${timeValue !== 1 ? "s" : ""} ago`
+      );
     }
 
-    setTimeString(`${timeValue} ${timeUnit}${timeValue !== 1 ? "s" : ""} ago`);
     setIsLoading(false);
   }, []);
 
   const deleteHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    await axios
-      .delete(`http://localhost:5000/reviews`, {
-        data: {
-          userId: loginCtx.loginState?.id,
-          reviewId: props.review._id,
-          placeId: props.review.place._id,
-        },
-      })
-      .then((res) => {
-        if (res.status === 200) {
-          props.onDelete();
-        }
-      });
+    if (props.review) {
+      await axios
+        .delete(`http://localhost:5000/reviews`, {
+          data: {
+            userId: loginCtx.loginState?.id,
+            reviewId: props.review._id,
+            placeId: props.review.place._id,
+          },
+        })
+        .then((res) => {
+          if (res.status === 200) {
+            props.onDelete();
+          }
+        });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const title = formData.get("title") as string;
-    const foodQuality = Number(formData.get("foodQuality"));
-    const drinkQuality = Number(formData.get("drinkQuality"));
-    const serviceQuality = Number(formData.get("serviceQuality"));
-    const goodForStudents = Number(formData.get("goodForStudents"));
-    const goodForFamilies = Number(formData.get("goodForFamilies"));
-    const forUnder21 = Number(formData.get("forUnder21"));
-    const noiseLevel = Number(formData.get("noiseLevel"));
-    const prices = Number(formData.get("prices"));
-    const otherComments = formData.get("otherComments") as string;
-
-    const newReview = {
-      _id: props.review._id,
-      author: props.review.author ? props.review.author._id : null,
-      place: props.review.place._id,
-      title,
-      foodQuality,
-      drinkQuality,
-      serviceQuality,
-      goodForStudents,
-      goodForFamilies,
-      forUnder21,
-      noiseLevel,
-      prices,
-      otherComments,
-      timeStamp: props.review.timeStamp,
-    };
-    await axios
-      .patch("http://localhost:5000/reviews", newReview)
-      .then((res) => {
+    if (formValues) {
+      const newReview = {
+        _id: props.review ? props.review._id : null,
+        author: loginCtx.loginState ? loginCtx.loginState.id : null,
+        place: props.review
+          ? props.review.place._id
+          : props.place
+          ? props.place
+          : null,
+        title: formValues.title,
+        hasFood: formValues.hasFood,
+        hasAlcohol: formValues.hasAlcohol,
+        foodQuality: formValues.foodQuality,
+        drinkQuality: formValues.drinkQuality,
+        serviceQuality: formValues.serviceQuality,
+        goodForStudents: formValues.goodForStudents,
+        goodForFamilies: formValues.goodForFamilies,
+        forUnder21: formValues.forUnder21,
+        noiseLevel: formValues.noiseLevel,
+        prices: formValues.prices,
+        otherComments: formValues.otherComments,
+        timeStamp: props.review ? props.review.timeStamp : null,
+      };
+      await axios("http://localhost:5000/reviews", {
+        method: props.review ? "patch" : "post",
+        data: newReview,
+      }).then((res) => {
         if (res.status === 200) {
           props.onEdit();
         } else {
           console.error(res);
         }
       });
+    }
   };
 
   return (
     <>
       {!loading && (
         <>
-          {!editing && (
+          {!editing && props.review && (
             <div className="h-full">
               <h3 className="text-lg font-semibold">{props.review.title}</h3>
               <div className="flex flex-col gap-y-2">
@@ -128,12 +150,23 @@ const ReviewComponent = (props: ReviewCompProps) => {
                       : props.review.author.username
                     : "[deleted]"}
                 </p>
+                <p>
+                  <span className="font-semibold">Has food: </span>
+                  {props.review.hasFood ? "Yes" : "No"}
+                </p>
+                <p>
+                  <span className="font-semibold">Has alcohol: </span>
+                  {props.review.hasAlcohol ? "Yes" : "No"}
+                </p>
                 {showFull && (
                   <>
-                    <p>
-                      <span className="font-semibold">Food: </span>
-                      {props.review.foodQuality}/5
-                    </p>
+                    {props.review.hasFood && (
+                      <p>
+                        <span className="font-semibold">Food: </span>
+                        {props.review.foodQuality}/5
+                      </p>
+                    )}
+
                     <p>
                       <span className="font-semibold">Drinks: </span>
                       {props.review.drinkQuality}/5
@@ -182,7 +215,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   {showFull ? "Show Less" : "Show More"}
                 </button>
 
-                {props.canEdit && (
+                {props.canEdit && props.review && (
                   <>
                     <button onClick={() => setEditing(true)}>
                       Edit Review
@@ -194,31 +227,101 @@ const ReviewComponent = (props: ReviewCompProps) => {
             </div>
           )}
           {editing && (
-            <form noValidate className="z-[1]" onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="title">Review Title: </label>
-                <input type="text" id="title" name="title" />
-              </div>
-              <div>
-                <label htmlFor="foodQuality">Food Quality (out of 5):</label>
+            <form
+              noValidate
+              onSubmit={handleSubmit}
+              className="space-y-4 z-[1]"
+            >
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="title" className="font-semibold">
+                  Title
+                </label>
                 <input
-                  type="number"
-                  id="foodQuality"
-                  name="foodQuality"
-                  value={formValues.foodQuality}
+                  type="text"
+                  id="title"
+                  name="title"
+                  required
+                  value={formValues ? formValues.title : ""}
                   onChange={(e) => {
                     setFormValues({
                       ...formValues,
-                      foodQuality: e.target.value ? Number(e.target.value) : 0,
+                      title: e.target.value,
                     });
                   }}
-                  min="1"
-                  max="5"
-                  step={1}
-                  required
                 />
               </div>
-              <div>
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="hasFood" className="font-semibold">
+                  Does this place have food?
+                </label>
+                <select
+                  id="hasFood"
+                  name="hasFood"
+                  value={formValues ? (formValues.hasFood ? "yes" : "no") : ""}
+                  onChange={(e) => {
+                    let newValues;
+                    if (e.target.value === "yes") {
+                      newValues = {
+                        ...formValues,
+                        hasFood: true,
+                      };
+                    } else {
+                      newValues = {
+                        ...formValues,
+                        foodQuality: 0,
+                        hasFood: false,
+                      };
+                    }
+                    setFormValues(newValues);
+                  }}
+                >
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              {formValues && formValues.hasFood && (
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="foodQuality">Food Quality (out of 5):</label>
+                  <input
+                    type="number"
+                    id="foodQuality"
+                    name="foodQuality"
+                    value={formValues.foodQuality ? formValues.foodQuality : 0}
+                    onChange={(e) => {
+                      setFormValues({
+                        ...formValues,
+                        foodQuality: e.target.value
+                          ? Number(e.target.value)
+                          : 0,
+                      });
+                    }}
+                    min="1"
+                    max="5"
+                    step={1}
+                    required
+                  />
+                </div>
+              )}
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="hasDrinks" className="font-semibold">
+                  Does this place serve alcohol?
+                </label>
+                <select
+                  id="hasDrinks"
+                  name="hasDrinks"
+                  value={formValues.hasAlcohol ? "yes" : "no"}
+                  onChange={(e) => {
+                    setFormValues({
+                      ...formValues,
+                      hasAlcohol: e.target.value === "yes" ? true : false,
+                    });
+                  }}
+                >
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div className="flex flex-col space-y-2">
                 <label htmlFor="drinkQuality">Drink Quality (out of 5):</label>
                 <input
                   type="number"

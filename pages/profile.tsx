@@ -12,32 +12,38 @@ const profile = () => {
   const router = useRouter();
   const loginCtx = useContext(LoginContext);
   const [data, setData] = useState<User>();
+  const [loading, setLoading] = useState(true);
   const [startDeleting, setStartDeleting] = useState(false);
   console.log("Profile data: ", data);
   useEffect(() => {
-    const getData = async () => {
-      await axios
-        .get("http://localhost:5000/profile", {
-          params: {
-            query: loginCtx.loginState ? loginCtx.loginState.id : null,
-          },
-        })
-        .then(async (data) => {
-          setData(data.data);
-        })
-        .catch((err) => {
-          if (err.response.data === "No user exists" && loginCtx.logout) {
-            loginCtx.logout();
-            router.push("/");
-          }
-        });
-    };
     if (loginCtx.loginState) {
-      getData();
-    } else {
-      router.push("/login");
+      setLoading(false);
     }
-  }, []);
+    if (!loading) {
+      const getData = async () => {
+        await axios
+          .get("http://localhost:5000/profile", {
+            params: {
+              query: loginCtx.loginState ? loginCtx.loginState.id : null,
+            },
+          })
+          .then(async (data) => {
+            setData(data.data);
+          })
+          .catch((err) => {
+            if (err.response.data === "No user exists" && loginCtx.logout) {
+              loginCtx.logout();
+              router.push("/");
+            }
+          });
+      };
+      if (loginCtx.loginState) {
+        getData();
+      } else {
+        router.push("/login");
+      }
+    }
+  }, [loginCtx, loading]);
 
   const reload = () => {
     router.reload();
@@ -72,13 +78,15 @@ const profile = () => {
     if (sortedReviews) {
       return sortedReviews.map((review) => {
         return (
-          <li className="md:w-64 px-4 py-2" key={review._id}>
+          <li className="md:w-64 w-full px-4 py-2" key={review._id}>
             <div className="shadow-md p-4 rounded-md">
               <ReviewComponent
                 onDelete={reload}
                 onEdit={reload}
                 review={review}
                 canEdit={true}
+                isEditing={false}
+                place={null}
               />
             </div>
           </li>
@@ -95,9 +103,10 @@ const profile = () => {
         <li
           onClick={() => redirectHandler(`/places/${place._id}`)}
           key={place._id}
+          className="bg-blue-200 p-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
         >
-          <h3>{place.Name}</h3>
-          <p>{place.School.CommonName}</p>
+          <h3>Place: {place.Name}</h3>
+          <p>School: {place.School.CommonName}</p>
         </li>
       );
     });
@@ -113,10 +122,18 @@ const profile = () => {
         {data && (
           <>
             {data && <h1 className="text-lg font-bold">{data.username}</h1>}
+            <button
+              onClick={() => {
+                setStartDeleting(true);
+              }}
+              className="bg-red-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
+            >
+              Delete Profile
+            </button>
             {data.Favorites.length ? (
               <section>
-                <h2>Your Favorites: </h2>
-                <ul>{renderFavs()}</ul>
+                <h2 className="mb-5">Your Favorites: </h2>
+                <ul className="flex flex-wrap">{renderFavs()}</ul>
               </section>
             ) : (
               <></>
@@ -131,13 +148,7 @@ const profile = () => {
             ) : (
               <></>
             )}
-            <button
-              onClick={() => {
-                setStartDeleting(true);
-              }}
-            >
-              Delete Profile
-            </button>
+
             {startDeleting && (
               <div>
                 <h2>Are you sure you want to delete?</h2>

@@ -4,12 +4,14 @@ interface LoginProviderProps {
   children: ReactNode;
 }
 
+interface LoginState {
+  isLoggedIn: boolean;
+  id: string | null;
+  email: string | null;
+}
+
 interface LoginContextType {
-  loginState: {
-    isLoggedIn: boolean;
-    id: string | null;
-    email: string | null;
-  };
+  loginState: LoginState;
   login: (id: string, email: string) => void;
   logout: () => void;
 }
@@ -17,14 +19,17 @@ interface LoginContextType {
 export const LoginContext = createContext<Partial<LoginContextType>>({});
 
 export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
-  const [loginState, setLoginState] = useState({
-    isLoggedIn:
-      typeof window !== "undefined"
-        ? Boolean(localStorage.getItem("cbLoggedIn"))
-        : false,
-    id: typeof window !== "undefined" ? localStorage.getItem("cbUsername") : "",
-    email: typeof window !== "undefined" ? localStorage.getItem("email") : null,
-  });
+  const [loginState, setLoginState] = useState<LoginState | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    setLoginState({
+      isLoggedIn: Boolean(localStorage.getItem("cbLoggedIn")),
+      id: localStorage.getItem("cbUsername") || null,
+      email: localStorage.getItem("email") || null,
+    });
+  }, []);
 
   // useEffect(() => {
   //   let localLogin =

@@ -216,10 +216,17 @@ app.get("/schools/:id", async (req, res) => {
   try {
     client.connect();
     const schools = client.db("Schools").collection("Schools");
-    const singleSchool = await schools
+    const places = client.db("Places").collection("Places");
+    await schools
       .findOne({ _id: new ObjectId(req.params.id) })
-      .then((school) => {
-        return res.status(200).send({ school });
+      .then(async (school) => {
+        const schoolPlaces = await places
+          .find({
+            "School._id": new ObjectId(req.params.id),
+          })
+          .toArray();
+        console.log("SchoolPlaces: ", schoolPlaces);
+        return res.status(200).send({ school, places: schoolPlaces });
       });
   } catch (err) {
     res.status(400).send({ message: "Could not find school.", error: err });
@@ -291,6 +298,7 @@ app.patch("/places/:id", async (req, res) => {
   const id = req.params.id;
   const { address, city, state, zip, school, name, creator, submissionId } =
     req.body;
+  school._id = new ObjectId(school._id);
   const fullAddress = `${address} ${city} ${state} ${zip}`;
   if (!submissionId || submissionId !== creator._id) {
     return res
@@ -300,6 +308,7 @@ app.patch("/places/:id", async (req, res) => {
   try {
     await client.connect();
     const places = client.db("Places").collection("Places");
+    const schools = client.db("Schools").collection("Schools");
     const existingPlace = await places.findOne({ _id: new ObjectId(id) });
     console.log("Existing place: ", existingPlace);
     let newCoordinates = null;
@@ -360,8 +369,6 @@ app.get("/places/:id", async (req, res) => {
 });
 
 app.get("/reviews/:placeId", async (req, res) => {
-  console.log("Params: ", req.params);
-  const data = [];
   try {
     await client.connect();
     const reviewDb = client.db("Reviews").collection("Reviews");
@@ -380,6 +387,7 @@ app.get("/reviews/:placeId", async (req, res) => {
 app.post("/reviews", async (req, res) => {
   try {
     const review = req.body;
+    console.log("Review: ", review);
     await client.connect();
     const reviews = client.db("Reviews").collection("Reviews");
     const users = client.db("Users").collection("Users");
@@ -393,6 +401,8 @@ app.post("/reviews", async (req, res) => {
       },
       place,
       title: review.title,
+      hasFood: review.hasFood,
+      hasAlcohol: review.hasAlcohol,
       foodQuality: review.foodQuality,
       drinkQuality: review.drinkQuality,
       serviceQuality: review.serviceQuality,
@@ -427,13 +437,23 @@ app.patch("/reviews", async (req, res) => {
   try {
     await client.connect();
     const clientReview = req.body;
+    console.log("clientReview: ", clientReview);
     const reviews = client.db("Reviews").collection("Reviews");
     const users = client.db("Users").collection("Users");
+    const author = await users.findOne({
+      _id: new ObjectId(clientReview.author),
+    });
     const places = client.db("Places").collection("Places");
+    const assocPlace = await places.findOne({
+      _id: new ObjectId(clientReview.place),
+    });
     const reviewStructure = {
       _id: new ObjectId(clientReview._id),
-      author: clientReview.author,
-      place: clientReview.place,
+      author: {
+        _id: author._id,
+        username: author.username,
+      },
+      place: assocPlace,
       title: clientReview.title,
       foodQuality: clientReview.foodQuality,
       drinkQuality: clientReview.drinkQuality,
@@ -444,6 +464,8 @@ app.patch("/reviews", async (req, res) => {
       noiseLevel: clientReview.noiseLevel,
       prices: clientReview.prices,
       otherComments: clientReview.otherComments,
+      hasFood: clientReview.hasFood,
+      hasAlcohol: clientReview.hasAlcohol,
       timeStamp: [...clientReview.timeStamp, new Date()],
     };
     await reviews.updateOne(
@@ -486,7 +508,6 @@ app.patch("/reviews", async (req, res) => {
 app.delete("/reviews", async (req, res) => {
   try {
     await client.connect();
-    console.log("params: ", req.body);
     const reviewId = req.body.reviewId;
     const userId = req.body.userId;
     const placeId = req.body.placeId;

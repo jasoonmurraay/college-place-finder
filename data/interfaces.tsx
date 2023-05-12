@@ -22,7 +22,9 @@ export interface Review {
   author: ReviewAuthor | null;
   place: Establishment;
   title: string;
-  foodQuality: number;
+  hasFood: boolean;
+  hasAlcohol: boolean;
+  foodQuality: number | null;
   serviceQuality: number;
   goodForStudents: number;
   goodForFamilies: number;
@@ -35,8 +37,10 @@ export interface Review {
 }
 
 export interface ReviewCompProps {
-  review: Review;
+  review: Review | null;
   canEdit: boolean;
+  isEditing: boolean;
+  place: string | null;
   onEdit: () => void;
   onDelete: () => void;
 }

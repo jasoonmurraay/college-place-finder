@@ -55,6 +55,7 @@ const PlaceId = ({ data, error }: PropsType) => {
     };
   }, [handleResize]);
   const loginCtx = useContext(LoginContext);
+  console.log("Login ctx: ", loginCtx);
   const router = useRouter();
   const latitude = data?.Latitude;
   const longitude = data?.Longitude;
@@ -83,72 +84,6 @@ const PlaceId = ({ data, error }: PropsType) => {
   });
   const redirectHandler = (path: string) => {
     router.push(path);
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const title = formData.get("title") as string;
-    const foodQuality = Number(formData.get("foodQuality"));
-    const drinkQuality = Number(formData.get("drinkQuality"));
-    const serviceQuality = Number(formData.get("serviceQuality"));
-    const goodForStudents = Number(formData.get("goodForStudents"));
-    const goodForFamilies = Number(formData.get("goodForFamilies"));
-    const forUnder21 = Number(formData.get("forUnder21"));
-    const noiseLevel = Number(formData.get("noiseLevel"));
-    const prices = Number(formData.get("prices"));
-    const otherComments = formData.get("otherComments") as string;
-
-    const newReview = {
-      author: user ? user._id : null,
-      place: data?._id,
-      title,
-      foodQuality,
-      drinkQuality,
-      serviceQuality,
-      goodForStudents,
-      goodForFamilies,
-      forUnder21,
-      noiseLevel,
-      prices,
-      otherComments,
-    };
-
-    // Form validation
-    if (
-      foodQuality === null ||
-      drinkQuality === null ||
-      serviceQuality === null ||
-      noiseLevel === null ||
-      prices === null
-    ) {
-      alert("Please fill out all fields.");
-      return;
-    } else if (
-      !Number.isInteger(foodQuality) ||
-      !Number.isInteger(drinkQuality) ||
-      !Number.isInteger(serviceQuality)
-    ) {
-      setFormError({
-        state: true,
-        message:
-          "Please make sure all number values are integers (i.e. 1, 2, 3, 4, or 5)",
-      });
-      return;
-    }
-
-    try {
-      const res = await axios.post("http://localhost:5000/reviews", newReview);
-      console.log(res.data);
-      if (res.status === 200) {
-        setReviewing(false);
-        setAlreadyReviewed(true);
-        router.reload();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while submitting the review.");
-    }
   };
 
   const reload = () => {
@@ -266,12 +201,11 @@ const PlaceId = ({ data, error }: PropsType) => {
               }
             }
             if (fetchData.data.Favorites.length) {
-              for (let i = 0; i < fetchData.data.Favorites.length; i++) {
-                if (fetchData.data.Favorites[i]._id === data?._id) {
-                  setfav(true);
-                  break;
-                }
-              }
+              fetchData.data.Favorites.includes(data?._id)
+                ? setfav(true)
+                : setfav(false);
+            } else {
+              setfav(false);
             }
           }
         })
@@ -294,6 +228,8 @@ const PlaceId = ({ data, error }: PropsType) => {
                   ? review.author._id === loginCtx.loginState?.id
                   : false
               }
+              isEditing={false}
+              place={null}
             />
           </div>
         </li>
@@ -314,7 +250,7 @@ const PlaceId = ({ data, error }: PropsType) => {
       let length = data?.Reviews.length;
       for (let i = 0; i < length; i++) {
         let review = data?.Reviews[i];
-        foodAvg += review.foodQuality;
+        foodAvg += review.foodQuality ? review.foodQuality : 0;
         drinkAvg += review.drinkQuality;
         serviceAvg += review.serviceQuality;
         familyAvg += review.goodForFamilies;
@@ -332,13 +268,13 @@ const PlaceId = ({ data, error }: PropsType) => {
 
       return (
         <div className="flex flex-row flex-wrap w-1/2 items-center justify-center">
-          <p className="mx-0">Food: {foodAvg.toFixed(1)}/5</p>
-          <p className="mx-0">Drinks: {drinkAvg.toFixed(1)}/5</p>
-          <p className="mx-0">Service: {serviceAvg.toFixed(1)}/5</p>
-          <p className="mx-0">For Families: {ynDict[Math.round(familyAvg)]}</p>
-          <p className="mx-0">For Students: {ynDict[Math.round(studentAvg)]}</p>
-          <p className="mx-0">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
-          <p className="mx-0">Prices: {priceDict[Math.round(priceAvg)]}</p>
+          <p className="mx-4">Food: {foodAvg.toFixed(1)}/5</p>
+          <p className="mx-4">Drinks: {drinkAvg.toFixed(1)}/5</p>
+          <p className="mx-4">Service: {serviceAvg.toFixed(1)}/5</p>
+          <p className="mx-4">For Families: {ynDict[Math.round(familyAvg)]}</p>
+          <p className="mx-4">For Students: {ynDict[Math.round(studentAvg)]}</p>
+          <p className="mx-4">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
+          <p className="mx-4">Prices: {priceDict[Math.round(priceAvg)]}</p>
         </div>
       );
     }
@@ -495,119 +431,14 @@ const PlaceId = ({ data, error }: PropsType) => {
                     </button>
                   )}
                   {reviewing && (
-                    <form noValidate className="z-[1]" onSubmit={handleSubmit}>
-                      <div>
-                        <label htmlFor="title">Review Title: </label>
-                        <input type="text" id="title" name="title" />
-                      </div>
-                      <div>
-                        <label htmlFor="foodQuality">
-                          Food Quality (out of 5):
-                        </label>
-                        <input
-                          type="number"
-                          id="foodQuality"
-                          name="foodQuality"
-                          min="1"
-                          max="5"
-                          step={1}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="drinkQuality">
-                          Drink Quality (out of 5):
-                        </label>
-                        <input
-                          type="number"
-                          id="drinkQuality"
-                          name="drinkQuality"
-                          min="1"
-                          max="5"
-                          step={1}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="serviceQuality">
-                          Service Quality (out of 5):
-                        </label>
-                        <input
-                          type="number"
-                          id="serviceQuality"
-                          name="serviceQuality"
-                          min="1"
-                          max="5"
-                          step={1}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="goodForStudents">
-                          Good for Students:
-                        </label>
-                        <select
-                          id="goodForStudents"
-                          name="goodForStudents"
-                          required
-                        >
-                          <option value="">Please select one</option>
-                          <option value={1}>Yes</option>
-                          <option value={0}>No</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="goodForFamilies">
-                          Good for Families:
-                        </label>
-                        <select
-                          id="goodForFamilies"
-                          name="goodForFamilies"
-                          required
-                        >
-                          <option value="">Please select one</option>
-                          <option value={1}>Yes</option>
-                          <option value={0}>No</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="forUnder21">For Under 21:</label>
-                        <select id="forUnder21" name="forUnder21" required>
-                          <option value="">Please select one</option>
-                          <option value={1}>Yes</option>
-                          <option value={0}>No</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="noiseLevel">Noise Level:</label>
-                        <select id="noiseLevel" name="noiseLevel" required>
-                          <option value="">Please select one</option>
-                          <option value={0}>Quiet</option>
-                          <option value={1}>Moderate</option>
-                          <option value={2}>Loud</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="prices">Prices:</label>
-                        <select id="prices" name="prices" required>
-                          <option value="">Please select one</option>
-                          <option value={0}>Cheap</option>
-                          <option value={1}>Average</option>
-                          <option value={2}>Expensive</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label htmlFor="otherComments">Other Comments:</label>
-                        <textarea
-                          id="otherComments"
-                          name="otherComments"
-                        ></textarea>
-                      </div>
-                      <button onClick={() => setReviewing(false)}>
-                        Cancel
-                      </button>
-                      <button type="submit">Submit Review</button>
-                    </form>
+                    <ReviewComponent
+                      isEditing={true}
+                      canEdit={true}
+                      onDelete={reload}
+                      onEdit={reload}
+                      review={null}
+                      place={data._id}
+                    />
                   )}
                   {formError.state && <ErrorMsg message={formError.message} />}
                 </>

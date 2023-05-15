@@ -9,6 +9,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
   const [showFull, setShowFull] = useState(false);
   const [loading, setIsLoading] = useState(true);
   const [editing, setEditing] = useState(props.isEditing);
+  const [homeFan, setHomeFan] = useState(false);
   const [formValues, setFormValues] = useState(
     props.review
       ? props.review
@@ -74,6 +75,23 @@ const ReviewComponent = (props: ReviewCompProps) => {
       );
     }
 
+    if (props.review?.author?.favSchools) {
+      for (let i = 0; i < props.review?.author?.favSchools.length; i++) {
+        console.log(
+          "fav school: ",
+          props.review.author.favSchools[i]._id,
+          props.review.place._id
+        );
+        if (
+          props.review.author.favSchools[i]._id ===
+          props.review.place.School._id
+        ) {
+          setHomeFan(true);
+          break;
+        }
+      }
+    }
+
     setIsLoading(false);
   }, []);
 
@@ -134,6 +152,8 @@ const ReviewComponent = (props: ReviewCompProps) => {
     }
   };
 
+  console.log("Home fan: ", homeFan);
+
   return (
     <>
       {!loading && (
@@ -149,6 +169,9 @@ const ReviewComponent = (props: ReviewCompProps) => {
                       ? "You"
                       : props.review.author.username
                     : "[deleted]"}
+                  {homeFan
+                    ? `\t(Fan of ${props.review.place.School.CommonName}!)`
+                    : ""}
                 </p>
                 <p>
                   <span className="font-semibold">Has food: </span>

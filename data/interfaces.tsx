@@ -15,6 +15,7 @@ export interface Establishment {
 export interface ReviewAuthor {
   _id: string;
   username: string;
+  favSchools: School[];
 }
 
 export interface Review {
@@ -52,6 +53,7 @@ export interface User {
   email: string;
   Reviews: Review[];
   Favorites: Establishment[];
+  FavSchools: School[];
 }
 
 export interface School {

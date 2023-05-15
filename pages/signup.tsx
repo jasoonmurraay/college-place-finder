@@ -1,17 +1,27 @@
 import ErrorMsg from "@/components/ErrorMsg";
 import Navbar from "@/components/Navbar";
 import { LoginContext } from "@/context/Login";
+import { School } from "@/data/interfaces";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useContext, useRef, useEffect, useState } from "react";
 
-const signup = () => {
+type signupProps = {
+  schools: School[];
+};
+
+const signup = (props: signupProps) => {
+  const schools = props.schools;
+  console.log("Schools in signup: ", schools);
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const usernameRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState({ state: false, message: "" });
+  const [favSchool1, setFavSchool1] = useState<string | null>(null);
+  const [favSchool2, setFavSchool2] = useState<string | null>(null);
+  console.log("Fav schools: ", favSchool1, favSchool2);
   const signupHandler = async () => {
     if (usernameRef.current && passwordRef.current && emailRef.current) {
       await axios
@@ -19,11 +29,12 @@ const signup = () => {
           username: usernameRef.current ? usernameRef.current.value : "",
           password: passwordRef.current ? passwordRef.current.value : "",
           email: emailRef.current ? emailRef.current.value : "",
+          favSchools: [favSchool1, favSchool2],
         })
         .then((data) => {
           console.log("Sign up data: ", data);
           if (loginCtx.login) {
-            loginCtx.login(data.data.newUser._id);
+            loginCtx.login(data.data.newUser._id, data.data.newUser.email);
           }
           if (
             window.history.length > 1 &&
@@ -46,6 +57,9 @@ const signup = () => {
       }
     }
   }, [loginCtx]);
+  const schoolSelect = schools.map((school) => {
+    return <option value={school._id}>{school.CommonName}</option>;
+  });
   return (
     <>
       <Navbar />
@@ -103,6 +117,29 @@ const signup = () => {
             placeholder="example@mail.com"
           />
         </div>
+        <div className="flex flex-col">
+          <label htmlFor="favSchool">Select your favorite schools: </label>
+          <div className="flex justify-between">
+            <select
+              onChange={(e) => {
+                setFavSchool1(e.target.value === "" ? null : e.target.value);
+              }}
+              id="favSchool"
+            >
+              <option value="">Select a school</option>
+              {schoolSelect}
+            </select>
+            <select
+              onChange={(e) => {
+                setFavSchool2(e.target.value === "" ? null : e.target.value);
+              }}
+              id="favSchool"
+            >
+              <option value={""}>Select a school</option>
+              {schoolSelect}
+            </select>
+          </div>
+        </div>
         <div className="flex items-center justify-center">
           <button
             onClick={signupHandler}
@@ -119,3 +156,13 @@ const signup = () => {
 };
 
 export default signup;
+
+export async function getServerSideProps() {
+  const schools = await axios.get("http://localhost:5000/schools");
+  console.log("School data: ", schools.data);
+  return {
+    props: {
+      schools: schools.data,
+    },
+  };
+}

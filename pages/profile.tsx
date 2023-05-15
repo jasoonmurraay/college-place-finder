@@ -7,6 +7,8 @@ import { useRouter } from "next/router";
 import ReviewComponent from "@/components/ReviewComponent";
 import Footer from "@/components/Footer";
 import ErrorMsg from "@/components/ErrorMsg";
+import Card from "@/components/Card";
+import Head from "next/head";
 
 const profile = () => {
   const router = useRouter();
@@ -61,6 +63,7 @@ const profile = () => {
           if (loginCtx.logout) {
             loginCtx.logout();
           }
+          router.push("/");
         }
       });
   };
@@ -117,11 +120,39 @@ const profile = () => {
   };
   return (
     <>
+      <Head>
+        <title>Profile</title>
+      </Head>
       <Navbar />
       <main className="flex flex-col items-center">
         {data && (
           <>
             {data && <h1 className="text-lg font-bold">{data.username}</h1>}
+            {data.FavSchools && (
+              <>
+                {" "}
+                <p>Favorite Schools: </p>{" "}
+                <ul className="flex flex-wrap">
+                  {data.FavSchools.map((school) => {
+                    return (
+                      <li
+                        onClick={() =>
+                          redirectHandler(`/schools/${school._id}`)
+                        }
+                        key={school._id}
+                        className="mx-3 my-5 transition-transform duration-300 ease-out hover:-translate-y-1"
+                      >
+                        <Card
+                          header={school.CommonName}
+                          subheader={`${school.City}, ${school.State}`}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>{" "}
+              </>
+            )}
+
             <button
               onClick={() => {
                 setStartDeleting(true);

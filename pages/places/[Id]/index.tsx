@@ -14,6 +14,7 @@ import {
   nlDict,
   priceDict,
   ynDict,
+  Review,
 } from "@/data/interfaces";
 import axios from "axios";
 import { useRouter } from "next/router";
@@ -215,7 +216,44 @@ const PlaceId = ({ data, error }: PropsType) => {
   }, [data, loginCtx.loginState?.isLoggedIn]);
 
   const renderReviews = () => {
-    return data?.Reviews.map((review) => {
+    let sortedReviews: Review[] = data ? data.Reviews : [];
+
+    if (data) {
+      sortedReviews.sort((a, b) => {
+        let aHasFavSchool = false;
+        if (a.author?.favSchools) {
+          for (let i = 0; i < a.author?.favSchools.length; i++) {
+            if (a.author?.favSchools[i]._id === data.School._id) {
+              aHasFavSchool = true;
+              break;
+            }
+          }
+        }
+
+        let bHasFavSchool = false;
+        if (b.author?.favSchools) {
+          for (let i = 0; i < b.author?.favSchools.length; i++) {
+            if (b.author?.favSchools[i]._id === data.School._id) {
+              aHasFavSchool = true;
+              break;
+            }
+          }
+        }
+
+        // Check if both reviews meet or don't meet the criteria
+        if (aHasFavSchool === bHasFavSchool) {
+          // Sort by the last element in the timeStamp array (from newest to oldest)
+          const aLastTimeStamp = new Date(a.timeStamp[a.timeStamp.length - 1]);
+          const bLastTimeStamp = new Date(b.timeStamp[b.timeStamp.length - 1]);
+          return bLastTimeStamp.getTime() - aLastTimeStamp.getTime(); // Sort in descending order
+        }
+
+        // Place the review with the author's favSchool ahead
+        return aHasFavSchool ? -1 : 1;
+      });
+    }
+
+    return sortedReviews.map((review) => {
       return (
         <li className="w-4/5 max-w-96 px-4 py-2" key={review._id}>
           <div className="h-full shadow-md p-4 rounded-md">
@@ -353,9 +391,9 @@ const PlaceId = ({ data, error }: PropsType) => {
                   </div>
                 </ReactMapGL>
               </div>
-              <section className="flex flex-col items-center z-[1]">
-                <div className="flex">
-                  <h1 className="font-bold text-2xl">{data.Name}</h1>
+              <section className="flex flex-col items-center z-[1] md:w-2/4">
+                <div className="flex w-full justify-center">
+                  <h1 className="font-bold text-2xl mr-3">{data.Name}</h1>
                   <button onClick={favoriteHandler}>
                     <img
                       className="h-5 w-5"
@@ -383,9 +421,11 @@ const PlaceId = ({ data, error }: PropsType) => {
                         onClick={() =>
                           redirectHandler(`/schools/${data.School._id}`)
                         }
+                        className="text-blue-300 hover:text-blue-400"
                       >
-                        {data.School.CommonName}'s campus
+                        {data.School.CommonName}'s{" "}
                       </span>
+                      campus
                     </p>
                   )}
                   {distance >= 1 && (

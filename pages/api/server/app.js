@@ -71,8 +71,25 @@ app.post("/login", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
+  await client.connect();
   try {
-    await client.connect();
+    const schools = client.db("Schools").collection("Schools");
+    const modifySchools = async () => {
+      let arr = [];
+      for (let i = 0; i < req.body.favSchools.length; i++) {
+        await schools
+          .findOne({
+            _id: new ObjectId(req.body.favSchools[i]),
+          })
+          .then((school) => {
+            console.log("School: ", school);
+            arr.push(school);
+          });
+      }
+      return arr;
+    };
+    const modifiedSchools = await modifySchools();
+    console.log("modified schools: ", modifiedSchools);
     const users = client.db("Users").collection("Users");
     const foundUser = await users
       .findOne({
@@ -103,6 +120,7 @@ app.post("/signup", async (req, res) => {
             email: req.body.email,
             Reviews: [],
             Favorites: [],
+            FavSchools: modifiedSchools,
             created: new Date(),
           };
           await client.connect();
@@ -161,6 +179,7 @@ app.get("/profile", async (req, res) => {
         email: user.email,
         Reviews: user.Reviews,
         Favorites: user.Favorites,
+        FavSchools: user.FavSchools,
       });
     });
   } catch (err) {
@@ -398,6 +417,7 @@ app.post("/reviews", async (req, res) => {
       author: {
         _id: author._id,
         username: author.username,
+        favSchools: author.FavSchools,
       },
       place,
       title: review.title,
@@ -452,6 +472,7 @@ app.patch("/reviews", async (req, res) => {
       author: {
         _id: author._id,
         username: author.username,
+        favSchools: author.FavSchools,
       },
       place: assocPlace,
       title: clientReview.title,

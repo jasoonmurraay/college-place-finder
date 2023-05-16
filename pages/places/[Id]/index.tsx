@@ -37,10 +37,12 @@ import mapboxgl from "mapbox-gl";
 
 type PropsType = {
   data?: Establishment;
+  reviews?: Review[];
   error?: string;
 };
 
-const PlaceId = ({ data, error }: PropsType) => {
+const PlaceId = ({ data, error, reviews }: PropsType) => {
+  console.log("Reviews: ", reviews);
   const [isLoading, setIsLoading] = useState(true);
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
@@ -56,7 +58,6 @@ const PlaceId = ({ data, error }: PropsType) => {
     };
   }, [handleResize]);
   const loginCtx = useContext(LoginContext);
-  console.log("Login ctx: ", loginCtx);
   const router = useRouter();
   const latitude = data?.Latitude;
   const longitude = data?.Longitude;
@@ -83,6 +84,12 @@ const PlaceId = ({ data, error }: PropsType) => {
     state: false,
     message: "",
   });
+
+  useEffect(() => {
+    if (data || error) {
+      setIsLoading(false);
+    }
+  }, [data, error]);
   const redirectHandler = (path: string) => {
     router.push(path);
   };
@@ -216,42 +223,39 @@ const PlaceId = ({ data, error }: PropsType) => {
   }, [data, loginCtx.loginState?.isLoggedIn]);
 
   const renderReviews = () => {
-    let sortedReviews: Review[] = data ? data.Reviews : [];
-
-    if (data) {
-      sortedReviews.sort((a, b) => {
-        let aHasFavSchool = false;
-        if (a.author?.favSchools) {
-          for (let i = 0; i < a.author?.favSchools.length; i++) {
-            if (a.author?.favSchools[i]._id === data.School._id) {
-              aHasFavSchool = true;
-              break;
-            }
+    let sortedReviews: Review[] = reviews ? reviews : [];
+    sortedReviews.sort((a, b) => {
+      let aHasFavSchool = false;
+      if (a.author?.favSchools) {
+        for (let i = 0; i < a.author?.favSchools.length; i++) {
+          if (data && a.author?.favSchools[i]._id === data.School._id) {
+            aHasFavSchool = true;
+            break;
           }
         }
+      }
 
-        let bHasFavSchool = false;
-        if (b.author?.favSchools) {
-          for (let i = 0; i < b.author?.favSchools.length; i++) {
-            if (b.author?.favSchools[i]._id === data.School._id) {
-              aHasFavSchool = true;
-              break;
-            }
+      let bHasFavSchool = false;
+      if (b.author?.favSchools) {
+        for (let i = 0; i < b.author?.favSchools.length; i++) {
+          if (data && b.author?.favSchools[i]._id === data.School._id) {
+            bHasFavSchool = true;
+            break;
           }
         }
+      }
 
-        // Check if both reviews meet or don't meet the criteria
-        if (aHasFavSchool === bHasFavSchool) {
-          // Sort by the last element in the timeStamp array (from newest to oldest)
-          const aLastTimeStamp = new Date(a.timeStamp[a.timeStamp.length - 1]);
-          const bLastTimeStamp = new Date(b.timeStamp[b.timeStamp.length - 1]);
-          return bLastTimeStamp.getTime() - aLastTimeStamp.getTime(); // Sort in descending order
-        }
+      // Check if both reviews meet or don't meet the criteria
+      if (aHasFavSchool === bHasFavSchool) {
+        // Sort by the last element in the timeStamp array (from newest to oldest)
+        const aLastTimeStamp = new Date(a.timeStamp[a.timeStamp.length - 1]);
+        const bLastTimeStamp = new Date(b.timeStamp[b.timeStamp.length - 1]);
+        return bLastTimeStamp.getTime() - aLastTimeStamp.getTime(); // Sort in descending order
+      }
 
-        // Place the review with the author's favSchool ahead
-        return aHasFavSchool ? -1 : 1;
-      });
-    }
+      // Place the review with the author's favSchool ahead
+      return aHasFavSchool ? -1 : 1;
+    });
 
     return sortedReviews.map((review) => {
       return (
@@ -284,10 +288,10 @@ const PlaceId = ({ data, error }: PropsType) => {
     priceAvg = 0;
 
   const renderReviewAvgs = () => {
-    if (data) {
-      let length = data?.Reviews.length;
+    if (reviews) {
+      let length = reviews.length;
       for (let i = 0; i < length; i++) {
-        let review = data?.Reviews[i];
+        let review = reviews[i];
         foodAvg += review.foodQuality ? review.foodQuality : 0;
         drinkAvg += review.drinkQuality;
         serviceAvg += review.serviceQuality;
@@ -346,157 +350,163 @@ const PlaceId = ({ data, error }: PropsType) => {
         <title aria-label={`Information for ${data?.Name}`}>{data?.Name}</title>
       </Head>
       <Navbar />
-      <main className="mx-4 flex flex-col items-center">
-        {error && <ErrorMsg message={error} />}
-        {data && (
-          <>
-            <section className="mb-10 flex flex-col items-center w-full max-w-800 ">
-              <div className="mt-5 h-1/2 h-60 w-full sm:w-2/4 ">
-                <ReactMapGL
-                  {...viewState}
-                  mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-                  mapStyle="mapbox://styles/mapbox/streets-v12"
-                  onMove={handleViewportChange}
-                  attributionControl={false}
-                  style={{
-                    height: "100%",
-                    width: "100%",
-                  }}
-                >
-                  {markerVisible && (
-                    <Marker
-                      longitude={longitude}
-                      latitude={latitude}
-                      offset={[0, -250]}
-                      anchor="bottom"
-                      style={{ width: 20 }}
-                    >
-                      <img className="w-full h-full" src="/map-pin.png" />
-                    </Marker>
-                  )}
-                  {schoolMarker && (
-                    <Marker
-                      longitude={Number(data.School.longitude)}
-                      latitude={Number(data.School.latitude)}
-                      offset={[0, -250]}
-                      anchor="bottom"
-                      style={{ width: 20 }}
-                    >
-                      <img className="w-full h-full" src="/map-pin-red.png" />
-                    </Marker>
-                  )}
+      {!isLoading && (
+        <main className="mx-4 flex flex-col items-center">
+          {error && <ErrorMsg message={error} />}
+          {data && (
+            <>
+              <section className="mb-10 flex flex-col items-center w-full max-w-800 ">
+                <div className="mt-5 h-1/2 h-60 w-full sm:w-2/4 ">
+                  <ReactMapGL
+                    {...viewState}
+                    mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                    mapStyle="mapbox://styles/mapbox/streets-v12"
+                    onMove={handleViewportChange}
+                    attributionControl={false}
+                    style={{
+                      height: "100%",
+                      width: "100%",
+                    }}
+                  >
+                    {markerVisible && (
+                      <Marker
+                        longitude={longitude}
+                        latitude={latitude}
+                        offset={[0, -250]}
+                        anchor="bottom"
+                        style={{ width: 20 }}
+                      >
+                        <img className="w-full h-full" src="/map-pin.png" />
+                      </Marker>
+                    )}
+                    {schoolMarker && (
+                      <Marker
+                        longitude={Number(data.School.longitude)}
+                        latitude={Number(data.School.latitude)}
+                        offset={[0, -250]}
+                        anchor="bottom"
+                        style={{ width: 20 }}
+                      >
+                        <img className="w-full h-full" src="/map-pin-red.png" />
+                      </Marker>
+                    )}
 
-                  <div className="flex items-center">
-                    {/* <AttributionControl /> */}
-                  </div>
-                </ReactMapGL>
-              </div>
-              <section className="flex flex-col items-center z-[1] md:w-2/4">
-                <div className="flex w-full justify-center">
-                  <h1 className="font-bold text-2xl mr-3">{data.Name}</h1>
-                  <button onClick={favoriteHandler}>
-                    <img
-                      className="h-5 w-5"
-                      src={fav ? `/full-heart.png` : `/empty-heart.png`}
-                    />
-                  </button>
+                    <div className="flex items-center">
+                      {/* <AttributionControl /> */}
+                    </div>
+                  </ReactMapGL>
                 </div>
-                {loginCtx.loginState &&
-                  data.Creator._id === loginCtx.loginState.id && (
-                    <button
-                      onClick={() =>
-                        redirectHandler(`/places/${data._id}/edit`)
-                      }
-                    >
-                      Edit Place
+                <section className="flex flex-col items-center z-[1] md:w-2/4">
+                  <div className="flex w-full justify-center">
+                    <h1 className="font-bold text-2xl mr-3">{data.Name}</h1>
+                    <button onClick={favoriteHandler}>
+                      <img
+                        className="h-5 w-5"
+                        src={fav ? `/full-heart.png` : `/empty-heart.png`}
+                      />
                     </button>
-                  )}
+                  </div>
+                  {loginCtx.loginState &&
+                    data.Creator._id === loginCtx.loginState.id && (
+                      <button
+                        onClick={() =>
+                          redirectHandler(`/places/${data._id}/edit`)
+                        }
+                      >
+                        Edit Place
+                      </button>
+                    )}
+                </section>
+                {distance && (
+                  <>
+                    {distance < 1 && (
+                      <p className="z-[1]">
+                        {`<1 mile from`}{" "}
+                        <span
+                          onClick={() =>
+                            redirectHandler(`/schools/${data.School._id}`)
+                          }
+                          className="text-blue-300 hover:text-blue-400"
+                        >
+                          {data.School.CommonName}'s{" "}
+                        </span>
+                        campus
+                      </p>
+                    )}
+                    {distance >= 1 && (
+                      <p>
+                        {`${distance} ${
+                          distance === 1 ? "mile" : "miles"
+                        } from`}
+                        <span
+                          onClick={() =>
+                            redirectHandler(`/schools/${data.School._id}`)
+                          }
+                        >
+                          {data.School.CommonName}'s campus
+                        </span>
+                      </p>
+                    )}
+                  </>
+                )}
+                {data.Reviews.length ? (
+                  <>
+                    <h2 className="font-semibold">
+                      Overall Review Averages ({data.Reviews.length}{" "}
+                      {data.Reviews.length === 1 ? "review" : "reviews"})
+                    </h2>
+                    {renderReviewAvgs()}
+                  </>
+                ) : (
+                  <div className="block w-2/4 h-2"></div>
+                )}
               </section>
-              {distance && (
-                <>
-                  {distance < 1 && (
-                    <p className="z-[1]">
-                      {`<1 mile from`}{" "}
-                      <span
-                        onClick={() =>
-                          redirectHandler(`/schools/${data.School._id}`)
-                        }
-                        className="text-blue-300 hover:text-blue-400"
+              <section className="flex flex-col items-center">
+                {!alreadyReviewed && (
+                  <>
+                    {!reviewing && (
+                      <button
+                        className="z-[1]"
+                        onClick={() => {
+                          if (loginCtx.loginState && !loginCtx.loginState.id) {
+                            redirectHandler("/login");
+                          }
+                          setReviewing(true);
+                        }}
                       >
-                        {data.School.CommonName}'s{" "}
-                      </span>
-                      campus
-                    </p>
-                  )}
-                  {distance >= 1 && (
-                    <p>
-                      {`${distance} ${distance === 1 ? "mile" : "miles"} from`}
-                      <span
-                        onClick={() =>
-                          redirectHandler(`/schools/${data.School._id}`)
-                        }
-                      >
-                        {data.School.CommonName}'s campus
-                      </span>
-                    </p>
-                  )}
-                </>
-              )}
-              {data.Reviews.length ? (
-                <>
-                  <h2 className="font-semibold">
-                    Overall Review Averages ({data.Reviews.length}{" "}
-                    {data.Reviews.length === 1 ? "review" : "reviews"})
-                  </h2>
-                  {renderReviewAvgs()}
-                </>
-              ) : (
-                <div className="block w-2/4 h-2"></div>
-              )}
-            </section>
-            <section className="flex flex-col items-center">
-              {!alreadyReviewed && (
-                <>
-                  {!reviewing && (
-                    <button
-                      className="z-[1]"
-                      onClick={() => {
-                        if (loginCtx.loginState && !loginCtx.loginState.id) {
-                          redirectHandler("/login");
-                        }
-                        setReviewing(true);
-                      }}
-                    >
-                      Create a Review
-                    </button>
-                  )}
-                  {reviewing && (
-                    <ReviewComponent
-                      isEditing={true}
-                      canEdit={true}
-                      onDelete={reload}
-                      onEdit={reload}
-                      review={null}
-                      place={data._id}
-                    />
-                  )}
-                  {formError.state && <ErrorMsg message={formError.message} />}
-                </>
-              )}
-              {data.Reviews.length ? (
-                <>
-                  <h2 className="text-lg font-semibold">Reviews</h2>
-                  <ul className="flex flex-row flex-wrap justify-center mb-10">
-                    {renderReviews()}
-                  </ul>
-                </>
-              ) : (
-                <p>Looks like there aren't any reviews yet!</p>
-              )}
-            </section>
-          </>
-        )}
-      </main>
+                        Create a Review
+                      </button>
+                    )}
+                    {reviewing && (
+                      <ReviewComponent
+                        isEditing={true}
+                        canEdit={true}
+                        onDelete={reload}
+                        onEdit={reload}
+                        review={null}
+                        place={data._id}
+                      />
+                    )}
+                    {formError.state && (
+                      <ErrorMsg message={formError.message} />
+                    )}
+                  </>
+                )}
+                {data.Reviews.length ? (
+                  <>
+                    <h2 className="text-lg font-semibold">Reviews</h2>
+                    <ul className="flex flex-row flex-wrap justify-center mb-10">
+                      {renderReviews()}
+                    </ul>
+                  </>
+                ) : (
+                  <p>Looks like there aren't any reviews yet!</p>
+                )}
+              </section>
+            </>
+          )}
+        </main>
+      )}
       <Footer />
     </>
   );
@@ -505,15 +515,14 @@ const PlaceId = ({ data, error }: PropsType) => {
 export default PlaceId;
 
 export async function getServerSideProps(context: contextType) {
-  console.log("context: ", context.params);
   try {
     const data = await axios
       .get(`http://localhost:5000/places/${context.params.Id}`)
       .then((data) => {
-        console.log("Place data: ", data.data.place);
         return {
           props: {
             data: data.data.place,
+            reviews: data.data.reviews,
           },
         };
       });

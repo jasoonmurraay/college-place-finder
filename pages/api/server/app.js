@@ -83,7 +83,9 @@ app.post("/signup", async (req, res) => {
           })
           .then((school) => {
             console.log("School: ", school);
-            arr.push(school);
+            if (school) {
+              arr.push(school);
+            }
           });
       }
       return arr;
@@ -236,6 +238,7 @@ app.get("/schools/:id", async (req, res) => {
     client.connect();
     const schools = client.db("Schools").collection("Schools");
     const places = client.db("Places").collection("Places");
+    const reviews = client.db("Reviews").collection("Reviews");
     await schools
       .findOne({ _id: new ObjectId(req.params.id) })
       .then(async (school) => {
@@ -244,8 +247,24 @@ app.get("/schools/:id", async (req, res) => {
             "School._id": new ObjectId(req.params.id),
           })
           .toArray();
-        console.log("SchoolPlaces: ", schoolPlaces);
-        return res.status(200).send({ school, places: schoolPlaces });
+        let placeReviews = [];
+        for (let i = 0; i < schoolPlaces.length; i++) {
+          let indivPlReviews = reviews.find({
+            "place._id": schoolPlaces[i]._id,
+          });
+          indivPlReviews = await indivPlReviews.toArray();
+          placeReviews.push({
+            _id: schoolPlaces[i]._id,
+            name: schoolPlaces[i].Name,
+            address: schoolPlaces[i].Address,
+            latitude: schoolPlaces[i].Latitude,
+            longitude: schoolPlaces[i].Longitude,
+            reviews: indivPlReviews,
+          });
+        }
+        console.log("School places: ", schoolPlaces);
+        console.log("Reviews: ", placeReviews);
+        return res.status(200).send({ school, places: placeReviews });
       });
   } catch (err) {
     res.status(400).send({ message: "Could not find school.", error: err });
@@ -369,11 +388,17 @@ app.patch("/places/:id", async (req, res) => {
 app.get("/places/:id", async (req, res) => {
   await client.connect();
   const places = client.db("Places").collection("Places");
+  const reviews = client.db("Reviews").collection("Reviews");
   const targetPlace = await places
     .findOne({ _id: new ObjectId(req.params.id) })
-    .then((place) => {
+    .then(async (place) => {
       if (place) {
-        return res.status(200).send({ place });
+        let placeReviews = reviews.find({
+          "place._id": new ObjectId(req.params.id),
+        });
+        placeReviews = await placeReviews.toArray();
+        console.log("Place reviews: ", placeReviews);
+        return res.status(200).send({ place, reviews: placeReviews });
       } else {
         return res
           .status(400)
@@ -434,17 +459,14 @@ app.post("/reviews", async (req, res) => {
       otherComments: review.otherComments,
       timeStamp: [new Date()],
     });
-    const updatednewReview = await reviews.findOne({
-      _id: newReview.insertedId,
-    });
     await users.updateOne(
       { _id: new ObjectId(review.author) },
-      { $push: { Reviews: updatednewReview } }
+      { $push: { Reviews: { _id: newReview.insertedId } } }
     );
     await places.updateOne(
       { _id: new ObjectId(review.place) },
       {
-        $push: { Reviews: updatednewReview },
+        $push: { Reviews: { _id: newReview.insertedId } },
       }
     );
     res.status(200).send("Review uploaded!");

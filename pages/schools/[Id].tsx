@@ -19,7 +19,18 @@ type contextType = {
 
 type PropsType = {
   school: School;
-  places: Establishment[];
+  places: {
+    data: PlaceData[];
+  };
+};
+
+type PlaceData = {
+  _id: string;
+  address: string;
+  name: string;
+  latitude: string;
+  longitude: string;
+  reviews: Review[];
 };
 
 type ReviewData = {
@@ -41,6 +52,7 @@ type viewStateType = {
 };
 
 const schoolPage = (props: PropsType) => {
+  console.log("School page props: ", props);
   const [loading, setLoading] = useState(true);
   const latitude = Number(props.school.latitude);
   const longitude = Number(props.school.longitude);
@@ -70,8 +82,8 @@ const schoolPage = (props: PropsType) => {
 
   const getReviews = async () => {
     const reviewData: any = [];
-    for (let i = 0; i < props.places.length; i++) {
-      const reviews = props.places[i].Reviews;
+    for (let i = 0; i < props.places.data.length; i++) {
+      const reviews = props.places.data[i].reviews;
       const qualitySums = {
         foodQuality: 0,
         drinkQuality: 0,
@@ -107,38 +119,36 @@ const schoolPage = (props: PropsType) => {
   const renderEstablishments = () => {
     if (reviewDb) {
       type ScorePlace = {
-        establishment: Establishment;
+        establishment: PlaceData;
         qualityScore: number;
         foodQuality: number;
         drinkQuality: number;
         serviceQuality: number;
       };
-      const establishmentsWithReviewData: ScorePlace[] = props.places.map(
-        (establishment) => {
-          const reviewData = reviewDb.find(
-            (data) => data.placeId === establishment._id
-          );
-          if (reviewData) {
+      const establishmentsWithReviewData: ScorePlace[] = props.places.data.map(
+        (place) => {
+          if (place) {
             const foodQuality =
-              reviewData?.reviews.reduce(
+              place.reviews.reduce(
                 (sum, review) =>
                   sum + (review.foodQuality ? review.foodQuality : 0),
                 0
-              ) / reviewData?.reviews.length || 0;
+              ) / place.reviews.length || 0;
+
             const drinkQuality =
-              reviewData?.reviews.reduce(
+              place.reviews.reduce(
                 (sum, review) => sum + review.drinkQuality,
                 0
-              ) / reviewData?.reviews.length || 0;
+              ) / place.reviews.length || 0;
             const serviceQuality =
-              reviewData?.reviews.reduce(
+              place.reviews.reduce(
                 (sum, review) => sum + review.serviceQuality,
                 0
-              ) / reviewData?.reviews.length || 0;
+              ) / place.reviews.length || 0;
             const qualityScore =
               (foodQuality + drinkQuality + serviceQuality) / 3;
             return {
-              establishment,
+              establishment: place,
               qualityScore,
               foodQuality,
               drinkQuality,
@@ -146,7 +156,7 @@ const schoolPage = (props: PropsType) => {
             };
           } else {
             return {
-              establishment: establishment,
+              establishment: place,
               qualityScore: 0,
               foodQuality: 0,
               drinkQuality: 0,
@@ -164,8 +174,8 @@ const schoolPage = (props: PropsType) => {
 
       return sortedEstablishments.map(
         ({ establishment, foodQuality, drinkQuality, serviceQuality }) => {
-          const longitude = Number(establishment.Longitude);
-          const latitude = Number(establishment.Latitude);
+          const longitude = Number(establishment.longitude);
+          const latitude = Number(establishment.latitude);
 
           if (longitude && latitude) {
             return (
@@ -177,8 +187,8 @@ const schoolPage = (props: PropsType) => {
                 className="w-64 h-48 max-w-96 px-4 py-2 flex flex-col items-center transition-transform duration-300 ease-out hover:-translate-y-1"
               >
                 <div className="h-full w-full shadow-md p-4 rounded-md flex flex-col items-center justify-center bg-gray-100">
-                  <h3 className="font-medium">{establishment.Name}</h3>
-                  <p>{establishment.Address}</p>
+                  <h3 className="font-medium">{establishment.name}</h3>
+                  <p>{establishment.address}</p>
                   {drinkQuality === 0 || serviceQuality === 0 ? (
                     <p>No reviews yet</p>
                   ) : (
@@ -246,10 +256,10 @@ const schoolPage = (props: PropsType) => {
 
   const renderPlaceMarkers = () => {
     const viewport = new WebMercatorViewport(viewState);
-    return props.places
+    return props.places.data
       .filter((place) => {
-        const placeLon = Number(place.Longitude);
-        const placeLat = Number(place.Latitude);
+        const placeLon = Number(place.longitude);
+        const placeLat = Number(place.latitude);
         if (placeLat && placeLon) {
           const [x, y] = viewport.project([placeLon, placeLat]);
           if (viewState) {
@@ -261,8 +271,8 @@ const schoolPage = (props: PropsType) => {
         return false;
       })
       .map((place) => {
-        const longitude = Number(place.Longitude);
-        const latitude = Number(place.Latitude);
+        const longitude = Number(place.longitude);
+        const latitude = Number(place.latitude);
         return (
           <div
             key={place._id}
@@ -282,7 +292,7 @@ const schoolPage = (props: PropsType) => {
                 <div
                   onClick={() => redirectHandler(`/places/${place._id}`, null)}
                 >
-                  {place.Name}
+                  {place.name}
                 </div>
               </Popup>
             )}
@@ -377,10 +387,13 @@ export async function getServerSideProps(context: contextType) {
   const { data } = await axios.get(
     `http://localhost:5000/schools/${context.params.Id}`
   );
+  console.log("Data: ", data);
   return {
     props: {
       school: data.school,
-      places: data.places,
+      places: {
+        data: data.places,
+      },
     },
   };
 }

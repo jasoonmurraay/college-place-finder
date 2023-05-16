@@ -10,35 +10,39 @@ import ErrorMsg from "@/components/ErrorMsg";
 import Card from "@/components/Card";
 import Head from "next/head";
 
-const profile = () => {
+const Profile = () => {
   const router = useRouter();
   const loginCtx = useContext(LoginContext);
   const [data, setData] = useState<User>();
   const [loading, setLoading] = useState(true);
   const [startDeleting, setStartDeleting] = useState(false);
   console.log("Profile data: ", data);
+
   useEffect(() => {
     if (loginCtx.loginState) {
       setLoading(false);
     }
+
     if (!loading) {
       const getData = async () => {
-        await axios
-          .get("http://localhost:5000/profile", {
+        try {
+          const response = await axios.get("http://localhost:5000/profile", {
             params: {
               query: loginCtx.loginState ? loginCtx.loginState.id : null,
             },
-          })
-          .then(async (data) => {
-            setData(data.data);
-          })
-          .catch((err) => {
-            if (err.response.data === "No user exists" && loginCtx.logout) {
-              loginCtx.logout();
-              router.push("/");
-            }
           });
+          setData(response.data);
+        } catch (error: any) {
+          if (
+            error.response.data === "No user exists" &&
+            loginCtx.logout != null
+          ) {
+            loginCtx.logout();
+            router.push("/");
+          }
+        }
       };
+
       if (loginCtx.loginState) {
         getData();
       } else {
@@ -52,20 +56,22 @@ const profile = () => {
   };
 
   const deleteProfileHandler = async () => {
-    await axios
-      .delete("http://localhost:5000/profile", {
+    try {
+      const response = await axios.delete("http://localhost:5000/profile", {
         data: {
           userId: loginCtx.loginState?.id,
         },
-      })
-      .then((res) => {
-        if (res.status === 200) {
-          if (loginCtx.logout) {
-            loginCtx.logout();
-          }
-          router.push("/");
-        }
       });
+
+      if (response.status === 200) {
+        if (loginCtx.logout != null) {
+          loginCtx.logout();
+        }
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Profile deletion failed", error);
+    }
   };
 
   const renderReviews = () => {
@@ -78,11 +84,12 @@ const profile = () => {
         return 0;
       }
     });
-    if (sortedReviews) {
+
+    if (sortedReviews && sortedReviews.length > 0) {
       return sortedReviews.map((review) => {
         return (
           <li className="md:w-64 w-full px-4 py-2" key={review._id}>
-            <div className="shadow-md p-4 rounded-md">
+            <div className="shadow-md p-4 rounded-md flex flex-col items-center">
               <ReviewComponent
                 onDelete={reload}
                 onEdit={reload}
@@ -91,6 +98,11 @@ const profile = () => {
                 isEditing={false}
                 place={null}
               />
+              <button
+                onClick={() => redirectHandler(`/places/${review.place._id}`)}
+              >
+                View this Place
+              </button>
             </div>
           </li>
         );
@@ -118,22 +130,27 @@ const profile = () => {
   const redirectHandler = (path: string) => {
     router.push(path);
   };
+
   return (
     <>
       <Head>
-        <title>Profile</title>
+        <title>Profile - College Bar and Restaurant Finder</title>
       </Head>
       <Navbar />
-      <main className="flex flex-col items-center">
+      <div className="flex flex-col items-center">
+        <h1 className="text-lg font-bold" tabIndex={0}>
+          {data && data.username}
+        </h1>
         {data && (
-          <>
-            {data && <h1 className="text-lg font-bold">{data.username}</h1>}
-            {data.FavSchools && (
+          <main className="flex flex-col items-center">
+            {data.FavSchools.length > 0 && (
               <>
-                {" "}
-                <p>Favorite Schools: </p>{" "}
+                <h2 tabIndex={0}>Favorite Schools:</h2>
                 <ul className="flex flex-wrap">
                   {data.FavSchools.map((school) => {
+                    if (!school) {
+                      return null;
+                    }
                     return (
                       <li
                         onClick={() =>
@@ -141,6 +158,8 @@ const profile = () => {
                         }
                         key={school._id}
                         className="mx-3 my-5 transition-transform duration-300 ease-out hover:-translate-y-1"
+                        role="button"
+                        tabIndex={0}
                       >
                         <Card
                           header={school.CommonName}
@@ -149,59 +168,59 @@ const profile = () => {
                       </li>
                     );
                   })}
-                </ul>{" "}
+                </ul>
               </>
             )}
-
             <button
               onClick={() => {
                 setStartDeleting(true);
               }}
               className="bg-red-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
+              tabIndex={0}
+              aria-describedby="delete-profile-info"
             >
               Delete Profile
             </button>
-            {data.Favorites.length ? (
+
+            {data.Favorites.length > 0 && (
               <section>
-                <h2 className="mb-5">Your Favorites: </h2>
+                <h2 className="mb-5" tabIndex={0}>
+                  Your Favorites:
+                </h2>
                 <ul className="flex flex-wrap">{renderFavs()}</ul>
               </section>
-            ) : (
-              <></>
             )}
-            {data.Reviews.length ? (
-              <>
-                <section className="flex flex-col items-center">
-                  <h2>Your Reviews: </h2>
-                  <ul className="flex flex-wrap">{renderReviews()}</ul>
-                </section>
-              </>
-            ) : (
-              <></>
+
+            {data.Reviews.length > 0 && (
+              <section className="flex flex-col items-center">
+                <h2 tabIndex={0}>Your Reviews:</h2>
+                <ul className="flex flex-wrap">{renderReviews()}</ul>
+              </section>
             )}
 
             {startDeleting && (
               <div>
-                <h2>Are you sure you want to delete?</h2>
-                <p>
+                <h2 tabIndex={0}>Are you sure you want to delete?</h2>
+                <p tabIndex={0}>
                   If you delete your profile, all reviews and places you have
                   created will stay on the site, but will no longer be
                   associated with your account. You will not be able to delete
                   any of them at that point.
                 </p>
-                <button onClick={() => setStartDeleting(false)}>
+                <button onClick={() => setStartDeleting(false)} tabIndex={0}>
                   Don't delete my account!
                 </button>
-                <button onClick={deleteProfileHandler}>
+                <button onClick={deleteProfileHandler} tabIndex={0}>
                   Delete my account
                 </button>
               </div>
             )}
-          </>
+          </main>
         )}
-      </main>
+      </div>
       <Footer />
     </>
   );
 };
-export default profile;
+
+export default Profile;

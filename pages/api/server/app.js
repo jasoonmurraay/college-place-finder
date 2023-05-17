@@ -169,8 +169,12 @@ app.post("/signup", async (req, res) => {
 app.get("/profile", async (req, res) => {
   try {
     client.connect();
-    const db = client.db("Users");
-    const users = db.collection("Users");
+    const users = client.db("Users").collection("Users");
+    const reviews = client.db("Reviews").collection("Reviews");
+    let userReviews = reviews.find({
+      "author._id": new ObjectId(req.query.query),
+    });
+    userReviews = await userReviews.toArray();
     await users.findOne({ _id: new ObjectId(req.query.query) }).then((user) => {
       if (!user) {
         return res.status(400).send("No user exists");
@@ -179,7 +183,7 @@ app.get("/profile", async (req, res) => {
         username: user.username,
         _id: user._id,
         email: user.email,
-        Reviews: user.Reviews,
+        Reviews: userReviews,
         Favorites: user.Favorites,
         FavSchools: user.FavSchools,
       });
@@ -313,12 +317,13 @@ app.post("/places", async (req, res) => {
           },
           timeStamp: new Date(),
         });
-        const updatedPlace = await places.findOne({
-          _id: newPlace.insertedId,
-        });
         await schools.updateOne(
           { _id: currSchool._id },
-          { $push: { establishments: updatedPlace } }
+          {
+            $push: {
+              establishments: { _id: new ObjectId(newPlace.insertedId) },
+            },
+          }
         );
         return res.status(200).send(newPlace);
       } else {
@@ -444,7 +449,14 @@ app.post("/reviews", async (req, res) => {
         username: author.username,
         favSchools: author.FavSchools,
       },
-      place,
+      place: {
+        _id: place._id,
+        Name: place.Name,
+        School: {
+          _id: place.School._id,
+          CommonName: place.School.CommonName,
+        },
+      },
       title: review.title,
       hasFood: review.hasFood,
       hasAlcohol: review.hasAlcohol,
@@ -515,31 +527,6 @@ app.patch("/reviews", async (req, res) => {
       { _id: new ObjectId(clientReview._id) },
       {
         $set: reviewStructure,
-      }
-    );
-    const updatedReview = await reviews.findOne({
-      _id: new ObjectId(clientReview._id),
-    });
-    await users.updateOne(
-      {
-        _id: new ObjectId(clientReview.author),
-        "Reviews._id": new ObjectId(clientReview._id),
-      },
-      {
-        $set: {
-          "Reviews.$": reviewStructure,
-        },
-      }
-    );
-    await places.updateOne(
-      {
-        _id: new ObjectId(clientReview.place),
-        "Reviews._id": new ObjectId(clientReview._id),
-      },
-      {
-        $set: {
-          "Reviews.$": reviewStructure,
-        },
       }
     );
     res.status(200).send({ message: "Successfully updated!" });

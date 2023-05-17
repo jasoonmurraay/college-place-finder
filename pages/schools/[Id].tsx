@@ -193,9 +193,21 @@ const schoolPage = (props: PropsType) => {
                     <p>No reviews yet</p>
                   ) : (
                     <>
-                      <p>Food quality: {foodQuality.toFixed(1)} / 5</p>
-                      <p>Drink quality: {drinkQuality.toFixed(1)} / 5</p>
-                      <p>Service quality: {serviceQuality.toFixed(1)} / 5</p>
+                      {foodQuality > 0 ? (
+                        <p>Food quality: {foodQuality.toFixed(1)} / 5</p>
+                      ) : (
+                        <></>
+                      )}
+                      {drinkQuality > 0 ? (
+                        <p>Drink quality: {drinkQuality.toFixed(1)} / 5</p>
+                      ) : (
+                        <></>
+                      )}
+                      {serviceQuality > 0 ? (
+                        <p>Service quality: {serviceQuality.toFixed(1)} / 5</p>
+                      ) : (
+                        <></>
+                      )}
                     </>
                   )}
                 </div>
@@ -300,7 +312,7 @@ const schoolPage = (props: PropsType) => {
               longitude={longitude}
               latitude={latitude}
               offset={[0, -250]}
-              anchor="bottom"
+              anchor="center"
               style={{ width: 20 }}
               onClick={() => redirectHandler(`/places/${place._id}`, null)}
               key={place._id}
@@ -357,11 +369,14 @@ const schoolPage = (props: PropsType) => {
             </p>
             <p>{props.school.PrimaryConference}</p>
             <div className="flex flex-col items-center z-[1]">
-              <h2 className="text-lg font-semibold">Places: </h2>
-              {props.school.establishments.length ? (
-                <ul className="flex flex-wrap items-center justify-center">
-                  {renderEstablishments()}
-                </ul>
+              {props.places.data.length ? (
+                <>
+                  <h2 className="text-lg font-semibold">Places: </h2>
+
+                  <ul className="flex flex-wrap items-center justify-center">
+                    {renderEstablishments()}
+                  </ul>
+                </>
               ) : (
                 <></>
               )}
@@ -370,7 +385,7 @@ const schoolPage = (props: PropsType) => {
               onClick={() =>
                 redirectHandler("/places/create", props.school._id)
               }
-              className="bg-blue-100 p-5 rounded-md mt-10 transition-transform duration-300 ease-out hover:-translate-y-1"
+              className="bg-blue-100 p-5 rounded-md my-10 transition-transform duration-300 ease-out hover:-translate-y-1"
             >
               Add a Place
             </button>

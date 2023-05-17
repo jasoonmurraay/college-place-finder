@@ -97,9 +97,11 @@ const Profile = () => {
                 canEdit={true}
                 isEditing={false}
                 place={null}
+                isProfile={true}
               />
               <button
                 onClick={() => redirectHandler(`/places/${review.place._id}`)}
+                className="bg-green-300 text-white my-2 p-3 rounded-md w-full"
               >
                 View this Place
               </button>
@@ -138,14 +140,16 @@ const Profile = () => {
       </Head>
       <Navbar />
       <div className="flex flex-col items-center">
-        <h1 className="text-lg font-bold" tabIndex={0}>
+        <h1 className="text-3xl font-extrabold" tabIndex={0}>
           {data && data.username}
         </h1>
         {data && (
           <main className="flex flex-col items-center">
             {data.FavSchools.length > 0 && (
               <>
-                <h2 tabIndex={0}>Favorite Schools:</h2>
+                <h2 className="font-bold text-lg mt-5" tabIndex={0}>
+                  Favorite Schools:
+                </h2>
                 <ul className="flex flex-wrap">
                   {data.FavSchools.map((school) => {
                     if (!school) {
@@ -184,16 +188,18 @@ const Profile = () => {
 
             {data.Favorites.length > 0 && (
               <section>
-                <h2 className="mb-5" tabIndex={0}>
-                  Your Favorites:
+                <h2 className="mb-5 font-bold text-lg mt-5" tabIndex={0}>
+                  Your Favorite Places:
                 </h2>
                 <ul className="flex flex-wrap">{renderFavs()}</ul>
               </section>
             )}
 
             {data.Reviews.length > 0 && (
-              <section className="flex flex-col items-center">
-                <h2 tabIndex={0}>Your Reviews:</h2>
+              <section className="flex flex-col items-center ">
+                <h2 className="font-bold text-lg mt-5" tabIndex={0}>
+                  Your Reviews:
+                </h2>
                 <ul className="flex flex-wrap">{renderReviews()}</ul>
               </section>
             )}

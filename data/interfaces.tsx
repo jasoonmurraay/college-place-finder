@@ -42,6 +42,7 @@ export interface ReviewCompProps {
   canEdit: boolean;
   isEditing: boolean;
   place: string | null;
+  isProfile: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }

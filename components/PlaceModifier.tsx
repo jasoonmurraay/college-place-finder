@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { School } from "@/data/interfaces";
 import { UsStates } from "@/data/states";
+import ErrorMsg from "./ErrorMsg";
+import { useRouter } from "next/router";
 
 type FormData = {
   school: School | null;
   name: string | null;
   address: string | null;
-  images: FileList | null;
   zip: string | null;
   homeState: string | null;
   city: string | null;
@@ -27,8 +28,14 @@ type PropsType = {
 };
 
 const PlaceModifier = (props: PropsType) => {
+  const router = useRouter();
   const data = props.data;
   console.log("props: ", data);
+  const [error, setError] = useState<{
+    state: boolean;
+    message: string;
+    missingFields: string[];
+  }>({ state: false, message: "", missingFields: [] });
   const [schoolList, setSchoolList] = useState<School[]>();
   const [school, setSchool] = useState(data.school);
   const [name, setName] = useState(data.name);
@@ -51,16 +58,48 @@ const PlaceModifier = (props: PropsType) => {
   }, []);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    props.onSubmit({
-      name,
-      school,
-      address,
-      images,
-      zip,
-      homeState,
-      city,
-    });
+    setError({ state: false, message: "", missingFields: [] });
+
+    let missingFields: string[] = [];
+
+    if (name === "" || !name) {
+      missingFields.push("name");
+    }
+    if (!school) {
+      missingFields.push("school");
+    }
+    if (address === "" || !address) {
+      missingFields.push("address");
+    }
+    if (city === "" || !city) {
+      missingFields.push("city");
+    }
+    if (homeState === "" || !homeState) {
+      missingFields.push("state");
+    }
+    if (zip === "" || !zip) {
+      missingFields.push("ZIP Code");
+    }
+
+    if (missingFields.length > 0) {
+      setError((prevError) => ({
+        ...prevError,
+        state: true,
+        missingFields: [...prevError.missingFields, ...missingFields],
+      }));
+    } else {
+      props.onSubmit({
+        name,
+        school,
+        address,
+        zip,
+        homeState,
+        city,
+      });
+    }
   };
+
+  console.log("Modifer error state: ", error);
 
   const formSectionChange = (
     type: string,
@@ -100,104 +139,142 @@ const PlaceModifier = (props: PropsType) => {
   };
 
   const renderStates = () => {
-    return UsStates.map((state) => {
+    const states = UsStates.map((state) => {
       return (
-        <option key={state.abbreviation} value={state.abbreviation}>
+        <option
+          className="text-right"
+          key={state.abbreviation}
+          value={state.abbreviation}
+        >
           {state.abbreviation}
         </option>
       );
     });
+    return (
+      <>
+        <option className="text-right" key={"none"} value="">
+          Choose a state
+        </option>
+        {states}
+      </>
+    );
   };
 
   const renderOptions = () => {
     return schoolList?.map((thisSchool) => {
       return (
-        <option key={thisSchool._id} value={thisSchool._id}>
+        <option
+          className="text-right"
+          key={thisSchool._id}
+          value={thisSchool._id}
+        >
           {thisSchool.CommonName}
         </option>
       );
     });
   };
+  const renderMissingFields = () => {
+    let string = "";
+    if (error.missingFields.length) {
+      for (let i = 0; i < error.missingFields.length; i++) {
+        string += string.length
+          ? `, ${error.missingFields[i]}`
+          : `${error.missingFields[i]}`;
+      }
+    }
+    return string;
+  };
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="school">Associated School: </label>
-        <select
-          value={data.school ? data.school._id : ""}
-          onChange={handleSchoolChange}
-          id="school"
-          name="school"
+    <>
+      <form className="flex flex-col" onSubmit={handleSubmit}>
+        <div className="flex justify-between my-2">
+          <label htmlFor="school">Associated School: </label>
+          <select
+            value={school ? school._id : ""}
+            onChange={handleSchoolChange}
+            id="school"
+            name="school"
+          >
+            {renderOptions()}
+          </select>
+        </div>
+        <div className="flex justify-between my-2">
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={name ? name : ""}
+            onChange={(e) => formSectionChange("name", e)}
+            placeholder="Place Name"
+            className="text-right"
+          />
+        </div>
+        <div className="flex justify-between my-2">
+          <label htmlFor="address">Address</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            value={address ? address : ""}
+            onChange={(e) => formSectionChange("address", e)}
+            placeholder="Place Address"
+            className="text-right"
+          />
+        </div>
+        <div className="flex justify-between my-2">
+          <label htmlFor="city">City</label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={city ? city : ""}
+            onChange={(e) => formSectionChange("city", e)}
+            placeholder="City"
+            className="text-right"
+          />
+        </div>
+        <div className="flex justify-between my-2">
+          <label htmlFor="state">State </label>
+          <select
+            onChange={(e) => formSectionChange("state", e)}
+            id="state"
+            name="state"
+            value={homeState ? homeState : ""}
+          >
+            {renderStates()}
+          </select>
+        </div>
+        <div className="flex justify-between my-2">
+          <label htmlFor="zip">ZIP Code </label>
+          <input
+            type="text"
+            id="zip"
+            name="zip"
+            value={zip ? zip : ""}
+            onChange={(e) => formSectionChange("zip", e)}
+            placeholder="ZIP Code"
+            className="text-right"
+          />
+        </div>
+        <button className="bg-green-300 py-3 rounded-md mt-5" type="submit">
+          Submit
+        </button>
+        <button
+          className="bg-red-300 text-white py-3 rounded-md mt-5"
+          onClick={() => router.back()}
         >
-          {renderOptions()}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="name">Name</label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={name ? name : ""}
-          onChange={(e) => formSectionChange("name", e)}
-          placeholder="Place Name"
-        />
-      </div>
-      <div>
-        <label htmlFor="address">Address</label>
-        <input
-          type="text"
-          id="address"
-          name="address"
-          value={address ? address : ""}
-          onChange={(e) => formSectionChange("address", e)}
-          placeholder="Place Address"
-        />
-      </div>
-      <div>
-        <label htmlFor="city">City </label>
-        <input
-          type="text"
-          id="city"
-          name="city"
-          value={city ? city : ""}
-          onChange={(e) => formSectionChange("city", e)}
-          placeholder="City"
-        />
-      </div>
-      <div>
-        <label htmlFor="state">State </label>
-        <select
-          onChange={(e) => formSectionChange("state", e)}
-          id="state"
-          name="state"
-          value={homeState ? homeState : ""}
-        >
-          {renderStates()}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="zip">ZIP Code </label>
-        <input
-          type="text"
-          id="zip"
-          name="zip"
-          value={zip ? zip : ""}
-          onChange={(e) => formSectionChange("zip", e)}
-          placeholder="ZIP Code"
-        />
-      </div>
-      <div>
-        <label htmlFor="images">Images</label>
-        <input
-          type="file"
-          id="images"
-          name="images"
-          multiple
-          onChange={(e) => formSectionChange("image", e)}
-        />
-      </div>
-      <button type="submit">Submit</button>
-    </form>
+          Cancel
+        </button>
+      </form>
+      {error.state && (
+        <div className="mt-5 w-full">
+          <ErrorMsg
+            message={`The following fields are missing: ${renderMissingFields()}`}
+          />
+        </div>
+      )}
+    </>
   );
 };
 

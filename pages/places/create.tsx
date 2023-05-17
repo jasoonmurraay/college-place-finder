@@ -6,12 +6,13 @@ import { School } from "@/data/interfaces";
 import { UsStates } from "@/data/states";
 import { LoginContext } from "@/context/Login";
 import PlaceModifier from "@/components/PlaceModifier";
+import Footer from "@/components/Footer";
+import Head from "next/head";
 
 type FormData = {
   school: School | null;
   name: string | null;
   address: string | null;
-  images: FileList | null;
   zip: string | null;
   homeState: string | null;
   city: string | null;
@@ -67,19 +68,22 @@ const CreatePlace = () => {
       .catch((err) => {
         console.log(err);
       });
-    // TODO: submit the form data to the server
   };
 
   return (
     <>
+      <Head>
+        <title>Add a College Restaurant or Bar</title>
+      </Head>
       <Navbar />
       {!loading && (
-        <>
-          <h1>Add a Place</h1>
+        <main className="flex flex-col items-center">
+          <h1 className="text-xl font-bold mt-5">Add a Place</h1>
           <PlaceModifier data={placeProps} onSubmit={handleSubmit} />
-        </>
+        </main>
       )}
       {loading && <p>Loading...</p>}
+      <Footer />
     </>
   );
 };

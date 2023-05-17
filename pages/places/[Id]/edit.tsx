@@ -17,7 +17,6 @@ type FormData = {
   school: School | null;
   name: string | null;
   address: string | null;
-  images: FileList | null;
   zip: string | null;
   homeState: string | null;
   city: string | null;
@@ -70,7 +69,6 @@ const editPlace = ({ data, error }: PropsType) => {
           school: enteredData.school,
           name: enteredData.name,
           address: enteredData.address,
-          images: enteredData.images,
           zip: enteredData.zip,
           state: enteredData.homeState,
           city: enteredData.city,
@@ -80,7 +78,7 @@ const editPlace = ({ data, error }: PropsType) => {
         .then(() => {
           router.push(`/places/${data._id}`);
         })
-        .catch((err) => {
+        .catch(() => {
           setSendError(true);
         });
     }

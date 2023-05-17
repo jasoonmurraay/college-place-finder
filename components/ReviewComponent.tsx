@@ -158,6 +158,9 @@ const ReviewComponent = (props: ReviewCompProps) => {
     <>
       {!loading && (
         <>
+          {props.isProfile && (
+            <h2 className="font-bold text-lg">{props.review?.place.Name}</h2>
+          )}
           {!editing && props.review && (
             <div className="h-full">
               <h3 className="text-lg font-semibold">{props.review.title}</h3>
@@ -234,16 +237,27 @@ const ReviewComponent = (props: ReviewCompProps) => {
                 {timeString}
               </p>
               <div className="flex flex-col justify-center">
-                <button onClick={() => setShowFull(!showFull)}>
+                <button
+                  className="bg-blue-300 text-white p-3 my-2 rounded-md"
+                  onClick={() => setShowFull(!showFull)}
+                >
                   {showFull ? "Show Less" : "Show More"}
                 </button>
 
                 {props.canEdit && props.review && (
                   <>
-                    <button onClick={() => setEditing(true)}>
+                    <button
+                      className="bg-orange-300 text-white p-3 my-2 rounded-md"
+                      onClick={() => setEditing(true)}
+                    >
                       Edit Review
                     </button>
-                    <button onClick={deleteHandler}>Delete Review</button>
+                    <button
+                      className="bg-red-300 text-white p-3 my-2 rounded-md"
+                      onClick={deleteHandler}
+                    >
+                      Delete Review
+                    </button>
                   </>
                 )}
               </div>
@@ -386,7 +400,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   required
                 />
               </div>
-              <div>
+              <div className="md:flex md:flex-row md:justify-between flex flex-col">
                 <label htmlFor="goodForStudents">Good for Students:</label>
                 <select
                   value={formValues.goodForStudents}
@@ -407,7 +421,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   <option value={0}>No</option>
                 </select>
               </div>
-              <div>
+              <div className="md:flex md:flex-row md:justify-between flex flex-col">
                 <label htmlFor="goodForFamilies">Good for Families:</label>
                 <select
                   value={formValues.goodForFamilies}
@@ -428,7 +442,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   <option value={0}>No</option>
                 </select>
               </div>
-              <div>
+              <div className="md:flex md:flex-row md:justify-between flex flex-col">
                 <label htmlFor="forUnder21">For Under 21:</label>
                 <select
                   value={formValues.forUnder21}
@@ -447,7 +461,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   <option value={0}>No</option>
                 </select>
               </div>
-              <div>
+              <div className="md:flex md:flex-row md:justify-between flex flex-col">
                 <label htmlFor="noiseLevel">Noise Level:</label>
                 <select
                   value={formValues.noiseLevel}
@@ -467,7 +481,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   <option value={2}>Loud</option>
                 </select>
               </div>
-              <div>
+              <div className="md:flex md:flex-row md:justify-between flex flex-col">
                 <label htmlFor="prices">Prices:</label>
                 <select
                   value={formValues.prices}
@@ -487,7 +501,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   <option value={2}>Expensive</option>
                 </select>
               </div>
-              <div>
+              <div className="flex flex-col">
                 <label htmlFor="otherComments">Other Comments:</label>
                 <textarea
                   value={formValues.otherComments}
@@ -502,8 +516,21 @@ const ReviewComponent = (props: ReviewCompProps) => {
                   name="otherComments"
                 ></textarea>
               </div>
-              <button onClick={() => setEditing(false)}>Cancel</button>
-              <button type="submit">Submit Review</button>
+
+              <div className="flex flex-col">
+                <button
+                  className="bg-green-300 py-3 rounded-md my-3"
+                  type="submit"
+                >
+                  Submit Review
+                </button>
+                <button
+                  className="bg-red-300 text-white py-3 rounded-md my-3"
+                  onClick={() => setEditing(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           )}
         </>

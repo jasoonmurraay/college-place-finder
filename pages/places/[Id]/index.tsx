@@ -272,6 +272,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
               }
               isEditing={false}
               place={null}
+              isProfile={false}
             />
           </div>
         </li>
@@ -279,7 +280,9 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
     });
   };
 
-  let foodAvg = 0,
+  let hasFoodAvg = 0,
+    hasAlcAvg = 0,
+    foodAvg = 0,
     drinkAvg = 0,
     serviceAvg = 0,
     familyAvg = 0,
@@ -292,6 +295,8 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
       let length = reviews.length;
       for (let i = 0; i < length; i++) {
         let review = reviews[i];
+        hasFoodAvg += review.hasFood ? 1 : 0;
+        hasAlcAvg += review.hasAlcohol ? 1 : 0;
         foodAvg += review.foodQuality ? review.foodQuality : 0;
         drinkAvg += review.drinkQuality;
         serviceAvg += review.serviceQuality;
@@ -300,6 +305,8 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
         noiseAvg += review.noiseLevel;
         priceAvg += review.prices;
       }
+      hasFoodAvg /= length;
+      hasAlcAvg /= length;
       foodAvg /= length;
       drinkAvg /= length;
       serviceAvg /= length;
@@ -310,13 +317,46 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
 
       return (
         <div className="flex flex-row flex-wrap w-1/2 items-center justify-center">
-          <p className="mx-4">Food: {foodAvg.toFixed(1)}/5</p>
-          <p className="mx-4">Drinks: {drinkAvg.toFixed(1)}/5</p>
-          <p className="mx-4">Service: {serviceAvg.toFixed(1)}/5</p>
-          <p className="mx-4">For Families: {ynDict[Math.round(familyAvg)]}</p>
-          <p className="mx-4">For Students: {ynDict[Math.round(studentAvg)]}</p>
-          <p className="mx-4">Noise Level: {nlDict[Math.round(noiseAvg)]}</p>
-          <p className="mx-4">Prices: {priceDict[Math.round(priceAvg)]}</p>
+          <p className="mx-4">
+            <span className="font-semibold">Has Food? </span>
+            {Math.round(hasFoodAvg) === 1 ? "Yes" : "No"}
+          </p>
+          {foodAvg > 0 ? (
+            <p className="mx-4">
+              <span className="font-semibold">Food: </span>
+              {foodAvg.toFixed(1)}/5
+            </p>
+          ) : (
+            <></>
+          )}
+          <p className="mx-4">
+            <span className="font-semibold">Has Alcohol? </span>
+            {Math.round(hasAlcAvg) === 1 ? "Yes" : "No"}
+          </p>
+          <p className="mx-4">
+            <span className="font-semibold">Drinks: </span>
+            {drinkAvg.toFixed(1)}/5
+          </p>
+          <p className="mx-4">
+            <span className="font-semibold">Service: </span>
+            {serviceAvg.toFixed(1)}/5
+          </p>
+          <p className="mx-4">
+            <span className="font-semibold">For Families: </span>
+            {ynDict[Math.round(familyAvg)]}
+          </p>
+          <p className="mx-4">
+            <span className="font-semibold">For Students: </span>
+            {ynDict[Math.round(studentAvg)]}
+          </p>
+          <p className="mx-4">
+            <span className="font-semibold">Noise Level: </span>
+            {nlDict[Math.round(noiseAvg)]}
+          </p>
+          <p className="mx-4">
+            <span className="font-semibold">Prices: </span>
+            {priceDict[Math.round(priceAvg)]}
+          </p>
         </div>
       );
     }
@@ -485,6 +525,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                         onEdit={reload}
                         review={null}
                         place={data._id}
+                        isProfile={false}
                       />
                     )}
                     {formError.state && (
@@ -499,8 +540,10 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                       {renderReviews()}
                     </ul>
                   </>
-                ) : (
+                ) : !reviewing ? (
                   <p>Looks like there aren't any reviews yet!</p>
+                ) : (
+                  <></>
                 )}
               </section>
             </>

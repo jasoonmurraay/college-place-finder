@@ -49,7 +49,7 @@ const Navbar = () => {
       {loginCtx && !isLoading && (
         <nav className="flex items-center justify-between flex-wrap bg-blue-300 p-6 sticky top-0 z-[2]">
           <a href="/">
-            <img className="h-20 w-20" src="/logo.png" />
+            <img className="h-20 w-10" src="/logo.png" />
           </a>
           <div className="flex flex-col items-end ">
             {showBurger && (

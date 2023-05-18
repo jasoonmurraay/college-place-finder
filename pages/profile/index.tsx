@@ -176,6 +176,12 @@ const Profile = () => {
               </>
             )}
             <button
+              onClick={() => redirectHandler("/profile/edit")}
+              className="bg-blue-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
+            >
+              Edit Profile
+            </button>
+            <button
               onClick={() => {
                 setStartDeleting(true);
               }}

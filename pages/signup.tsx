@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { LoginContext } from "@/context/Login";
 import { School } from "@/data/interfaces";
 import axios from "axios";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { useContext, useRef, useEffect, useState } from "react";
 
@@ -62,6 +63,9 @@ const signup = (props: signupProps) => {
   });
   return (
     <>
+      <Head>
+        <title>Sign up - College Bar and Restaurant Finder</title>
+      </Head>
       <Navbar />
       {error.state && <ErrorMsg message={error.message} />}
       <main className="flex flex-col items-center w-full">

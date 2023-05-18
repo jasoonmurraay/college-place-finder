@@ -182,10 +182,22 @@ const schools = (props: SchoolsProps) => {
 export default schools;
 
 export async function getServerSideProps() {
-  const { data } = await axios.get("http://localhost:5000/schools");
-  return {
-    props: {
-      schools: data,
-    },
-  };
+  try {
+    const { data } = await axios.get("http://localhost:5000/schools");
+    return {
+      props: {
+        schools: data,
+      },
+    };
+  } catch (e) {
+    if (e.response.status !== 200) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: `/${e.response.status}`,
+        },
+        props: {},
+      };
+    }
+  }
 }

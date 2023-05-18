@@ -13,12 +13,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const loginCtx = useContext(LoginContext);
-  console.log("Login context: ", loginCtx);
-  const logoutHandler = () => {
-    if (loginCtx.logout) {
-      loginCtx.logout();
-    }
-  };
   useEffect(() => {
     if (loginCtx.loginState) {
       setLoading(false);
@@ -35,8 +29,8 @@ export default function Home() {
           College Bar and Restaurant Finder
         </title>
       </Head>
+      <Navbar />
       <main className={`flex flex-col ${inter.className}`}>
-        <Navbar />
         <section className="flex flex-col items-center p-5">
           <h1 className="text-xl font-semibold text-center">
             College Bar and Restaurant Finder

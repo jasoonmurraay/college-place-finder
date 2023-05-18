@@ -68,12 +68,13 @@ const login = () => {
 
   return (
     <>
-    <Head>
-      <title>Login - College Bar and Restaurant Finder</title>
-    </Head>
+      <Head>
+        <title>Login - College Bar and Restaurant Finder</title>
+      </Head>
       <Navbar />
-      {error.message && <ErrorMsg message={error.message} />}
+
       <main className="flex flex-col items-center">
+        {error.message && <ErrorMsg message={error.message} />}
         <h1 className="text-center my-3 font-bold text-2xl">Login</h1>
         <form
           onSubmit={loginHandler}

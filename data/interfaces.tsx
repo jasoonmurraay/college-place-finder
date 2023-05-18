@@ -54,7 +54,7 @@ export interface User {
   email: string;
   Reviews: Review[];
   Favorites: Establishment[];
-  FavSchools: School[];
+  FavSchools: (School | null)[];
 }
 
 export interface School {

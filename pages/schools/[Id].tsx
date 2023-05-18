@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { School, Review, Establishment } from "@/data/interfaces";
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
@@ -399,16 +399,27 @@ const schoolPage = (props: PropsType) => {
 export default schoolPage;
 
 export async function getServerSideProps(context: contextType) {
-  const { data } = await axios.get(
-    `http://localhost:5000/schools/${context.params.Id}`
-  );
-  console.log("Data: ", data);
-  return {
-    props: {
-      school: data.school,
-      places: {
-        data: data.places,
+  try {
+    const { data } = await axios.get(
+      `http://localhost:5000/schools/${context.params.Id}`
+    );
+    return {
+      props: {
+        school: data.school,
+        places: {
+          data: data.places,
+        },
       },
-    },
-  };
+    };
+  } catch (e) {
+    if (e.response.status !== 200) {
+      return {
+        redirect: {
+          permanent: false,
+          destination: `/${e.response.status}`,
+        },
+        props: {},
+      };
+    }
+  }
 }

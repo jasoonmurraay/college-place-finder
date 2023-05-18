@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt");
 const axios = require("axios");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const emailjs = require("@emailjs/browser");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 
 require("dotenv").config();
 app.use(bodyParser.json());
@@ -142,29 +144,51 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// app.post("/contact", (req, res) => {
-//   const { message, from_name } = req.body;
-//   const params = {
-//     message,
-//     from_name,
-//   };
-//   emailjs
-//     .send(
-//       process.env.NEXT_PUBLIC_EMAIL_SERVICE_ID,
-//       process.env.NEXT_PUBLIC_EMAIL_TEMPLATE_ID,
-//       params,
-//       process.env.NEXT_PUBLIC_EMAIL_KEY
-//     )
-//     .then(() => {
-//       return res.status(200).send({ message: "Contact sent successfully!" });
-//     })
-//     .catch((err) => {
-//       return res.status(400).send({
-//         message: "There was an error sending contact info",
-//         error: err,
-//       });
-//     });
-// });
+app.patch("/profile", async (req, res) => {
+  try {
+    const { id, data } = req.body;
+    await client.connect();
+    const users = client.db("Users").collection("Users");
+    const existingUser = await users.findOne({
+      $and: [
+        { _id: { $ne: new ObjectId(id) } },
+        { $or: [{ username: data.username }, { email: data.email }] },
+      ],
+    });
+    if (existingUser) {
+      return res.status(400).send({
+        Message:
+          "Failed to update information.  There is either an error with the server, or another user already uses that username and/or email",
+      });
+    }
+    bcrypt
+      .genSalt(Number(process.env.SALT_ROUNDS))
+      .then((salt) => {
+        return bcrypt.hash(data.password, salt);
+      })
+      .then(async (hash) => {
+        await users.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              username: data.username,
+              password: hash,
+              email: data.email,
+              FavSchools: data.FavSchools,
+            },
+          }
+        );
+        return res
+          .status(200)
+          .send({ Message: "Successfully updated profile!" });
+      });
+  } catch {
+    return res.status(400).send({
+      Message:
+        "Failed to update information.  There is either an error with the server, or another user already uses that username and/or email",
+    });
+  }
+});
 
 app.get("/profile", async (req, res) => {
   try {
@@ -604,6 +628,115 @@ app.put("/favorites", async (req, res) => {
   } catch (err) {
     res.status(400).send({ message: "An error has occurred", error: err });
   }
+});
+
+app.post("/reset-password", async (req, res) => {
+  const userEmail = req.body.email;
+  await client.connect();
+  const users = client.db("Users").collection("Users");
+  const hashes = client.db("Hash").collection("Hash");
+  const user = await users.findOne({ email: userEmail });
+  if (!user) {
+    return res
+      .status(400)
+      .send({ message: "No user is associated with that email address." });
+  }
+  const generateHash = () => {
+    const timestamp = new Date().getTime().toString();
+    const randomString = crypto.randomBytes(16).toString("hex");
+    const hash = crypto
+      .createHash("md5")
+      .update(timestamp + randomString)
+      .digest("hex");
+    const expirationTime = new Date(Date.now() + 30 * 60000); // Set expiration time to 30 minutes from now
+    return { hash, expirationTime };
+  };
+  const { hash, expirationTime } = generateHash();
+  await hashes.insertOne({
+    email: userEmail,
+    hash,
+    expirationTime,
+  });
+  const resetLink = `http://localhost:3000/reset-password?hash=${hash}`;
+  const mailOptions = {
+    from: process.env.GMAIL_ADDRESS,
+    to: userEmail,
+    subject: "Reset Your Password",
+    text: `We received a request for your password to be changed.  Click the following link to change your password: ${resetLink}`,
+  };
+  const smtpConfig = {
+    service: "gmail",
+    port: 465,
+    host: "smtp.gmail.com",
+    secure: true,
+    auth: {
+      type: "OAuth2",
+      user: process.env.GMAIL_ADDRESS,
+      clientId: process.env.GMAIL_CLIENT_ID,
+      clientSecret: process.env.GMAIL_CLIENT_SECRET,
+      refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+    },
+  };
+  const transporter = nodemailer.createTransport(smtpConfig);
+  transporter.verify(function (error, success) {
+    if (error) {
+      console.log("verify error: ", error);
+    } else {
+      console.log("Server is ready to send!");
+    }
+  });
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log("Error sending email: ", error);
+    } else {
+      console.log("Email sent successfully: ", info.response);
+      return res.status(200).send({ message: "Email sent successfully!" });
+    }
+  });
+  return res.status(500).send({ message: "Internal server error." });
+});
+
+app.get("/hash/:id", async (req, res) => {
+  try {
+    const hashQuery = req.params.id;
+    await client.connect();
+    const hashes = client.db("Hash").collection("Hash");
+    const oneHash = await hashes.findOne({ hash: hashQuery });
+    if (!oneHash) {
+      return res
+        .status(400)
+        .send({ message: "Could not find request in database" });
+    }
+    if (oneHash.expirationTime.getTime() < Date.now()) {
+      return res.status(498).send({
+        message:
+          "The request has expired.  Please enter a new password reset request.",
+      });
+    }
+    return res
+      .status(200)
+      .send({ message: "Found request.", email: oneHash.email });
+  } catch {
+    return res.status(500).send({ message: "Server error." });
+  }
+});
+
+app.patch("/password", async (req, res) => {
+  const { email, password } = req.body;
+  await client.connect();
+  const users = client.db("Users").collection("Users");
+  bcrypt
+    .genSalt(Number(process.env.SALT_ROUNDS))
+    .then((salt) => {
+      return bcrypt.hash(password, salt);
+    })
+    .then(async (hash) => {
+      await users.updateOne({ email: email }, { $set: { password: hash } });
+      return res.status(200).send({ message: "Updated password!" });
+    })
+    .catch(() => {
+      return res.status(400).send({ message: "Failed to update password." });
+    });
 });
 
 app.listen(5000, () => {

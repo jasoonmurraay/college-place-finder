@@ -506,7 +506,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                   <>
                     {!reviewing && (
                       <button
-                        className="z-[1]"
+                        className="z-[1] bg-orange-300 p-3 mb-5 rounded-md text-white transition-transform duration-300 ease-out hover:-translate-y-1"
                         onClick={() => {
                           if (loginCtx.loginState && !loginCtx.loginState.id) {
                             redirectHandler("/login");

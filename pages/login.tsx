@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { LoginContext } from "@/context/Login";
 import ErrorMsg from "@/components/ErrorMsg";
 import Footer from "@/components/Footer";
+import Head from "next/head";
 
 const login = () => {
   const loginCtx = useContext(LoginContext);
@@ -67,6 +68,9 @@ const login = () => {
 
   return (
     <>
+    <Head>
+      <title>Login - College Bar and Restaurant Finder</title>
+    </Head>
       <Navbar />
       {error.message && <ErrorMsg message={error.message} />}
       <main className="flex flex-col items-center">
@@ -120,13 +124,13 @@ const login = () => {
         <div className="flex flex-col items-center">
           <p>Don't have an account?</p>
           <a
-            className="bg-blue-300 text-white py-3 px-6 my-3 rounded-md"
+            className="bg-blue-300 text-white py-3 px-6 my-3 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
             href="/signup"
           >
             Sign up!
           </a>
           <a
-            className="bg-orange-300 text-white py-3 px-6 mt-6 rounded-md"
+            className="bg-orange-300 text-white py-3 px-6 mt-6 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
             href="/forgot"
           >
             Forgot password?

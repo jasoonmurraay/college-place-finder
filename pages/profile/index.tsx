@@ -133,6 +133,10 @@ const Profile = () => {
     router.push(path);
   };
 
+  const nonNullSchools = data?.FavSchools.filter(
+    (school) => school !== null
+  ).length;
+
   return (
     <>
       <Head>
@@ -145,12 +149,14 @@ const Profile = () => {
         </h1>
         {data && (
           <main className="flex flex-col items-center">
-            {data.FavSchools.length > 0 && (
+            {nonNullSchools && nonNullSchools > 0 && (
               <>
                 <h2 className="font-bold text-lg mt-5" tabIndex={0}>
-                  Favorite Schools:
+                  {nonNullSchools === 1
+                    ? "Favorite School:"
+                    : "Favorite Schools:"}
                 </h2>
-                <ul className="flex flex-wrap">
+                <ul className="flex flex-col sm:flex-row">
                   {data.FavSchools.map((school) => {
                     if (!school) {
                       return null;

@@ -42,7 +42,6 @@ type PropsType = {
 };
 
 const PlaceId = ({ data, error, reviews }: PropsType) => {
-  console.log("Reviews: ", reviews);
   const [isLoading, setIsLoading] = useState(true);
   const [windowSize, setWindowSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
@@ -79,7 +78,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
   const [user, setUser] = useState<User | null>(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
-  const [fav, setfav] = useState<boolean>();
+  const [fav, setfav] = useState<boolean | null>(null);
   const [formError, setFormError] = useState({
     state: false,
     message: "",
@@ -90,6 +89,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
       setIsLoading(false);
     }
   }, [data, error]);
+
   const redirectHandler = (path: string) => {
     router.push(path);
   };
@@ -194,6 +194,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
           },
         })
         .then((fetchData) => {
+          console.log("Fetch profile: ", fetchData);
           if (fetchData && fetchData.status === 400) {
             setUser(null);
           } else {
@@ -208,10 +209,13 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                 }
               }
             }
-            if (fetchData.data.Favorites.length) {
-              fetchData.data.Favorites.includes(data?._id)
-                ? setfav(true)
-                : setfav(false);
+            if (fetchData.data.Favorites.length && data) {
+              for (let i = 0; i < fetchData.data.Favorites.length; i++) {
+                if (fetchData.data.Favorites[i]._id === data._id) {
+                  setfav(true);
+                  break;
+                }
+              }
             } else {
               setfav(false);
             }
@@ -316,45 +320,45 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
       priceAvg /= length;
 
       return (
-        <div className="flex flex-row flex-wrap w-1/2 items-center justify-center">
-          <p className="mx-4">
-            <span className="font-semibold">Has Food? </span>
+        <div className="flex flex-col sm:flex-row sm:flex-wrap w-1/2 items-center justify-center">
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">Has Food? </span>
             {Math.round(hasFoodAvg) === 1 ? "Yes" : "No"}
           </p>
           {foodAvg > 0 ? (
-            <p className="mx-4">
-              <span className="font-semibold">Food: </span>
+            <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+              <span className="font-semibold sm:mr-2">Food: </span>
               {foodAvg.toFixed(1)}/5
             </p>
           ) : (
             <></>
           )}
-          <p className="mx-4">
-            <span className="font-semibold">Has Alcohol? </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">Has Alcohol? </span>
             {Math.round(hasAlcAvg) === 1 ? "Yes" : "No"}
           </p>
-          <p className="mx-4">
-            <span className="font-semibold">Drinks: </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">Drinks: </span>
             {drinkAvg.toFixed(1)}/5
           </p>
-          <p className="mx-4">
-            <span className="font-semibold">Service: </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">Service: </span>
             {serviceAvg.toFixed(1)}/5
           </p>
-          <p className="mx-4">
-            <span className="font-semibold">For Families: </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">For Families: </span>
             {ynDict[Math.round(familyAvg)]}
           </p>
-          <p className="mx-4">
-            <span className="font-semibold">For Students: </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">For Students: </span>
             {ynDict[Math.round(studentAvg)]}
           </p>
-          <p className="mx-4">
-            <span className="font-semibold">Noise Level: </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">Noise Level: </span>
             {nlDict[Math.round(noiseAvg)]}
           </p>
-          <p className="mx-4">
-            <span className="font-semibold">Prices: </span>
+          <p className="flex flex-col sm:flex-row items-center justify-center mt-2 sm:mt-0 sm:mx-4 text-center">
+            <span className="font-semibold sm:mr-2">Prices: </span>
             {priceDict[Math.round(priceAvg)]}
           </p>
         </div>
@@ -437,8 +441,10 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                   </ReactMapGL>
                 </div>
                 <section className="flex flex-col items-center z-[1] md:w-2/4">
-                  <div className="flex w-full justify-center">
-                    <h1 className="font-bold text-2xl mr-3">{data.Name}</h1>
+                  <div className="flex w-full items-center justify-center flex-col sm:flex sm:flex-row">
+                    <h1 className="font-bold text-2xl mr-3 text-center">
+                      {data.Name}
+                    </h1>
                     <button onClick={favoriteHandler}>
                       <img
                         className="h-5 w-5"
@@ -460,7 +466,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                 {distance && (
                   <>
                     {distance < 1 && (
-                      <p className="z-[1]">
+                      <p className="z-[1] text-center">
                         {`<1 mile from`}{" "}
                         <span
                           onClick={() =>
@@ -491,7 +497,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                 )}
                 {data.Reviews.length ? (
                   <>
-                    <h2 className="font-semibold">
+                    <h2 className="font-semibold text-center">
                       Overall Review Averages ({data.Reviews.length}{" "}
                       {data.Reviews.length === 1 ? "review" : "reviews"})
                     </h2>

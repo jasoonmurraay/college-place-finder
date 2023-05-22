@@ -120,10 +120,10 @@ const Profile = () => {
         <li
           onClick={() => redirectHandler(`/places/${place._id}`)}
           key={place._id}
-          className="bg-blue-200 p-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
+          className="my-5 sm:my-0 sm:mx-5 bg-white p-5 shadow-md flex flex-col items-center justify-center rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
         >
-          <h3>Place: {place.Name}</h3>
-          <p>School: {place.School.CommonName}</p>
+          <h3 className="font-semibold">{place.Name}</h3>
+          <p className="text-gray-400"> {place.School.CommonName}</p>
         </li>
       );
     });
@@ -144,9 +144,29 @@ const Profile = () => {
       </Head>
       <Navbar />
       <div className="flex flex-col items-center">
-        <h1 className="text-3xl font-extrabold" tabIndex={0}>
-          {data && data.username}
-        </h1>
+        <div>
+          <h1 className="text-3xl font-extrabold" tabIndex={0}>
+            {data && data.username}
+          </h1>
+          <div className="flex justify-between w-full">
+            <button
+              onClick={() => redirectHandler("/profile/edit")}
+              className="bg-blue-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
+            >
+              Edit Profile
+            </button>
+            <button
+              onClick={() => {
+                setStartDeleting(true);
+              }}
+              className="bg-red-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
+              tabIndex={0}
+              aria-describedby="delete-profile-info"
+            >
+              Delete Profile
+            </button>
+          </div>
+        </div>
         {data && (
           <main className="flex flex-col items-center">
             {nonNullSchools && nonNullSchools > 0 && (
@@ -181,29 +201,18 @@ const Profile = () => {
                 </ul>
               </>
             )}
-            <button
-              onClick={() => redirectHandler("/profile/edit")}
-              className="bg-blue-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
-            >
-              Edit Profile
-            </button>
-            <button
-              onClick={() => {
-                setStartDeleting(true);
-              }}
-              className="bg-red-300 text-white p-3 my-5 rounded-md transition-transform duration-300 ease-out hover:-translate-y-1"
-              tabIndex={0}
-              aria-describedby="delete-profile-info"
-            >
-              Delete Profile
-            </button>
 
             {data.Favorites.length > 0 && (
-              <section>
-                <h2 className="mb-5 font-bold text-lg mt-5" tabIndex={0}>
-                  Your Favorite Places:
+              <section className="flex flex-col items-center">
+                <h2
+                  className="mb-5 font-bold text-lg mt-5 text-center"
+                  tabIndex={0}
+                >
+                  Favorite Places:
                 </h2>
-                <ul className="flex flex-wrap">{renderFavs()}</ul>
+                <ul className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center sm:justify-between">
+                  {renderFavs()}
+                </ul>
               </section>
             )}
 

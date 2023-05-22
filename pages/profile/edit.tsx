@@ -4,7 +4,7 @@ import Head from "next/head";
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { LoginContext } from "@/context/Login";
-import { User, School } from "@/data/interfaces";
+import { User, School, Establishment, Review } from "@/data/interfaces";
 import { useRouter } from "next/router";
 import ErrorMsg from "@/components/ErrorMsg";
 
@@ -12,15 +12,23 @@ type EditProfProps = {
   schools: School[];
 };
 
+type EditProfileData = {
+  _id: string;
+  username: string;
+  email: string;
+  Reviews: Review[];
+  Favorites: Establishment[];
+  FavSchools: (School | null)[];
+};
+
 const editProfile = (props: EditProfProps) => {
   const schools = props.schools;
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState<User>({
+  const [profileData, setProfileData] = useState<EditProfileData>({
     _id: "",
     username: "",
-    password: "",
     email: "",
     Reviews: [],
     Favorites: [],
@@ -109,21 +117,6 @@ const editProfile = (props: EditProfProps) => {
           <div className="mb-6">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <input
-              value={profileData?.password}
-              className="shadow appearance-none border  rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-              id="password"
-              type="password"
-              onChange={(e) =>
-                setProfileData({ ...profileData, password: e.target.value })
-              }
-            />
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="email"
             >
               Email
@@ -196,13 +189,14 @@ const editProfile = (props: EditProfProps) => {
               </select>
             </div>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="submit"
             >
               Submit Changes
             </button>
+            <a href="/forgot">Want to change your password?</a>
           </div>
         </form>
       </main>

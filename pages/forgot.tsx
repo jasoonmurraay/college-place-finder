@@ -13,12 +13,6 @@ const forgot = () => {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
 
-  useEffect(() => {
-    if (loginCtx.loginState?.isLoggedIn) {
-      router.push("/");
-    }
-  });
-
   const validateEmail = (email: string) => {
     const re = /\S+@\S+\.\S+/;
     return re.test(email);

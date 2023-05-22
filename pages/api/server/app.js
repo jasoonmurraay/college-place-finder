@@ -161,27 +161,17 @@ app.patch("/profile", async (req, res) => {
           "Failed to update information.  There is either an error with the server, or another user already uses that username and/or email",
       });
     }
-    bcrypt
-      .genSalt(Number(process.env.SALT_ROUNDS))
-      .then((salt) => {
-        return bcrypt.hash(data.password, salt);
-      })
-      .then(async (hash) => {
-        await users.updateOne(
-          { _id: new ObjectId(id) },
-          {
-            $set: {
-              username: data.username,
-              password: hash,
-              email: data.email,
-              FavSchools: data.FavSchools,
-            },
-          }
-        );
-        return res
-          .status(200)
-          .send({ Message: "Successfully updated profile!" });
-      });
+    await users.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          username: data.username,
+          email: data.email,
+          FavSchools: data.FavSchools,
+        },
+      }
+    );
+    return res.status(200).send({ Message: "Successfully updated profile!" });
   } catch {
     return res.status(400).send({
       Message:
@@ -191,6 +181,7 @@ app.patch("/profile", async (req, res) => {
 });
 
 app.get("/profile", async (req, res) => {
+  console.log("query: ", req.query.query);
   try {
     client.connect();
     const users = client.db("Users").collection("Users");

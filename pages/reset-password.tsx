@@ -10,7 +10,7 @@ import Head from "next/head";
 const resetPassword = () => {
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
-  const hash = router.query.hash;
+  let hash = router.query.hash;
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pageError, setPageError] = useState({ state: false, message: "" });
@@ -38,7 +38,7 @@ const resetPassword = () => {
     if (hash) {
       getHashData();
     }
-  }, [hash]);
+  }, [hash, loginCtx]);
 
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

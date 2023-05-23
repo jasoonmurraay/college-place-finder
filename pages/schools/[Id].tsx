@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import { Marker, Popup } from "react-map-gl";
 import Head from "next/head";
 import { WebMercatorViewport } from "viewport-mercator-project";
+import Map from "@/components/Map";
 dotenv.config();
 
 type contextType = {
@@ -336,7 +337,7 @@ const schoolPage = (props: PropsType) => {
         <main className="flex flex-col items-center">
           <section className="w-full max-w-800 flex flex-col items-center">
             <div className="mt-5 h-60 w-4/5 sm:w-2/4">
-              <ReactMapGL
+              {/* <ReactMapGL
                 {...viewState}
                 mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
                 mapStyle="mapbox://styles/mapbox/streets-v12"
@@ -356,7 +357,13 @@ const schoolPage = (props: PropsType) => {
                   </Marker>
                 )}
                 {renderPlaceMarkers()}
-              </ReactMapGL>
+              </ReactMapGL> */}
+              <Map
+                latitude={latitude}
+                longitude={longitude}
+                school={props.school}
+                places={props.places.data}
+              />
             </div>
           </section>
           <section className="z-[1] flex flex-col items-center w-full">

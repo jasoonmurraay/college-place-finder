@@ -34,6 +34,7 @@ import Footer from "@/components/Footer";
 import ErrorMsg from "@/components/ErrorMsg";
 import ReviewComponent from "@/components/ReviewComponent";
 import mapboxgl from "mapbox-gl";
+import Map from "@/components/Map";
 
 type PropsType = {
   data?: Establishment;
@@ -401,7 +402,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
             <>
               <section className="mb-10 flex flex-col items-center w-full max-w-800 ">
                 <div className="mt-5 h-1/2 h-60 w-full sm:w-2/4 ">
-                  <ReactMapGL
+                  {/* <ReactMapGL
                     {...viewState}
                     mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
                     mapStyle="mapbox://styles/mapbox/streets-v12"
@@ -437,8 +438,14 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
 
                     <div className="flex items-center">
                       {/* <AttributionControl /> */}
-                    </div>
-                  </ReactMapGL>
+                  {/* </div> */}
+                  {/* </ReactMapGL> */}
+                  <Map
+                    latitude={data.Latitude}
+                    longitude={data.Longitude}
+                    places={null}
+                    school={data.School}
+                  />
                 </div>
                 <section className="flex flex-col items-center z-[1] md:w-2/4">
                   <div className="flex w-full items-center justify-center flex-col sm:flex sm:flex-row">

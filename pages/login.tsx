@@ -19,7 +19,7 @@ const login = () => {
   const loginHandler = async () => {
     if (usernameRef.current && passwordRef.current) {
       await axios
-        .post("http://localhost:5000/login", {
+        .post(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
           username: usernameRef.current.value,
           password: passwordRef.current.value,
         })

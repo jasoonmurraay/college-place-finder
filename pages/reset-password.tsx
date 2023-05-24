@@ -21,7 +21,7 @@ const resetPassword = () => {
     }
     async function getHashData() {
       await axios
-        .get(`http://localhost:5000/hash/${hash}`)
+        .get(`${process.env.NEXT_PUBLIC_API_URL}/hash/${hash}`)
         .then((data) => {
           setEmail(data.data.email);
         })
@@ -47,7 +47,7 @@ const resetPassword = () => {
       return;
     }
     await axios
-      .patch(`http://localhost:5000/password`, {
+      .patch(`${process.env.NEXT_PUBLIC_API_URL}/password`, {
         email,
         password: newPassword,
       })

@@ -32,7 +32,7 @@ const CreatePlace = () => {
       setSendError({ state: false, message: "" });
       const getSchool = async () => {
         await axios
-          .get(`http://localhost:5000/schools/${router.query.id}`)
+          .get(`${process.env.NEXT_PUBLIC_API_URL}/schools/${router.query.id}`)
           .then((data) => {
             setSchool(data.data.school);
           });
@@ -53,9 +53,8 @@ const CreatePlace = () => {
   };
 
   const handleSubmit = async (data: FormData) => {
-    console.log("Data: ", data);
     await axios
-      .post("http://localhost:5000/places", {
+      .post(`${process.env.NEXT_PUBLIC_API_URL}/places`, {
         name: data.name,
         school: data.school,
         address: data.address,

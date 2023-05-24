@@ -62,15 +62,6 @@ const contact = () => {
           setError({ state: true, message: "Failed to send contact message." });
         });
     }
-
-    // axios
-    //   .post("http://localhost:5000/contact", templateParams)
-    //   .then((res) => {
-    //     console.log("Res: ", res);
-    //   })
-    //   .catch((err) => {
-    //     console.log("Error: ", err);
-    //   });
   };
   return (
     <>

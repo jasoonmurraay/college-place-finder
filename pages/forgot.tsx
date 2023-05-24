@@ -29,7 +29,7 @@ const forgot = () => {
     setEmailError("");
 
     await axios
-      .post("http://localhost:5000/reset-password", {
+      .post(`${process.env.NEXT_PUBLIC_API_URL}/reset-password`, {
         email: email,
       })
       .then(() => {

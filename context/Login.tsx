@@ -30,20 +30,6 @@ export const LoginProvider: FC<LoginProviderProps> = ({ children }) => {
       email: localStorage.getItem("email") || null,
     });
   }, []);
-
-  // useEffect(() => {
-  //   let localLogin =
-  //     typeof window !== "undefined"
-  //       ? localStorage.getItem("cbUsername")
-  //       : false;
-  //   if (localLogin) {
-  //     setLoginState({
-  //       isLoggedIn: true,
-  //       id:
-  //     });
-  //   }
-  // }, []);
-
   const login = (id: string, email: string) => {
     localStorage.setItem("cbUsername", id);
     localStorage.setItem("cbLoggedIn", "true");

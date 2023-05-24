@@ -26,11 +26,14 @@ const Profile = () => {
     if (!loading) {
       const getData = async () => {
         try {
-          const response = await axios.get("http://localhost:5000/profile", {
-            params: {
-              query: loginCtx.loginState ? loginCtx.loginState.id : null,
-            },
-          });
+          const response = await axios.get(
+            "${process.env.NEXT_PUBLIC_API_URL}/profile",
+            {
+              params: {
+                query: loginCtx.loginState ? loginCtx.loginState.id : null,
+              },
+            }
+          );
           setData(response.data);
         } catch (error: any) {
           if (
@@ -57,11 +60,14 @@ const Profile = () => {
 
   const deleteProfileHandler = async () => {
     try {
-      const response = await axios.delete("http://localhost:5000/profile", {
-        data: {
-          userId: loginCtx.loginState?.id,
-        },
-      });
+      const response = await axios.delete(
+        "${process.env.NEXT_PUBLIC_API_URL}/profile",
+        {
+          data: {
+            userId: loginCtx.loginState?.id,
+          },
+        }
+      );
 
       if (response.status === 200) {
         if (loginCtx.logout != null) {

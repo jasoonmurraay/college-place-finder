@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Card from "@/components/Card";
 import Head from "next/head";
 import Footer from "@/components/Footer";
+import dotenv from "dotenv";
 
 interface SchoolsProps {
   schools: School[];
@@ -183,7 +184,9 @@ export default schools;
 
 export async function getServerSideProps() {
   try {
-    const { data } = await axios.get("http://localhost:5000/schools");
+    const { data } = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/schools`
+    );
     return {
       props: {
         schools: data,

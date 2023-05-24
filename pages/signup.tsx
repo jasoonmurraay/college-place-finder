@@ -26,7 +26,7 @@ const signup = (props: signupProps) => {
   const signupHandler = async () => {
     if (usernameRef.current && passwordRef.current && emailRef.current) {
       await axios
-        .post("http://localhost:5000/signup", {
+        .post(`${process.env.NEXT_PUBLIC_API_URL}/signup`, {
           username: usernameRef.current ? usernameRef.current.value : "",
           password: passwordRef.current ? passwordRef.current.value : "",
           email: emailRef.current ? emailRef.current.value : "",
@@ -176,7 +176,7 @@ const signup = (props: signupProps) => {
 export default signup;
 
 export async function getServerSideProps() {
-  const schools = await axios.get("http://localhost:5000/schools");
+  const schools = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schools`);
   console.log("School data: ", schools.data);
   return {
     props: {

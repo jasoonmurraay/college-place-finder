@@ -39,11 +39,14 @@ const editProfile = (props: EditProfProps) => {
   useEffect(() => {
     const getProfileData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/profile", {
-          params: {
-            query: loginCtx.loginState ? loginCtx.loginState.id : null,
-          },
-        });
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+          {
+            params: {
+              query: loginCtx.loginState ? loginCtx.loginState.id : null,
+            },
+          }
+        );
         setProfileData(response.data);
       } catch (error: any) {
         if (
@@ -65,7 +68,7 @@ const editProfile = (props: EditProfProps) => {
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await axios
-      .patch("http://localhost:5000/profile", {
+      .patch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
         id: loginCtx.loginState ? loginCtx.loginState.id : null,
         data: profileData,
       })
@@ -207,7 +210,7 @@ const editProfile = (props: EditProfProps) => {
 export default editProfile;
 
 export async function getServerSideProps() {
-  const schools = await axios.get("http://localhost:5000/schools");
+  const schools = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schools`);
   console.log("School data: ", schools.data);
   return {
     props: {

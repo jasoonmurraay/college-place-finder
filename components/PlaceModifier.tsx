@@ -41,16 +41,21 @@ const PlaceModifier = (props: PropsType) => {
   const [zip, setZip] = useState(data.zip);
   const [homeState, setHomeState] = useState(data.homeState);
   const [city, setCity] = useState(data.city);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const fetchSchools = async () => {
-      const schools = await axios.get("http://localhost:5000/schools");
+      const schools = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/schools`
+      );
       setSchoolList(schools.data);
     };
     fetchSchools();
     if (data.school) {
       setSchool(data.school);
     }
+    setLoading(false);
   }, [data]);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -175,101 +180,109 @@ const PlaceModifier = (props: PropsType) => {
   };
   return (
     <>
-      <form className="flex flex-col w-4/5 sm:w-1/2" onSubmit={handleSubmit}>
-        <div className="flex justify-between my-2">
-          <label className="w-full" htmlFor="school">
-            Associated School:{" "}
-          </label>
-          <select
-            value={school ? school._id : ""}
-            onChange={handleSchoolChange}
-            id="school"
-            name="school"
-            className="w-full"
+      {!loading && (
+        <>
+          <form
+            className="flex flex-col w-4/5 sm:w-1/2"
+            onSubmit={handleSubmit}
           >
-            {renderOptions()}
-          </select>
-        </div>
-        <div className="flex justify-between my-2">
-          <label className="w-full" htmlFor="name">
-            Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={name ? name : ""}
-            onChange={(e) => formSectionChange("name", e)}
-            placeholder="Place Name"
-            className="text-right w-full"
-          />
-        </div>
-        <div className="flex justify-between my-2">
-          <label className="w-full" htmlFor="address">
-            Address
-          </label>
-          <input
-            type="text"
-            id="address"
-            name="address"
-            value={address ? address : ""}
-            onChange={(e) => formSectionChange("address", e)}
-            placeholder="Place Address"
-            className="text-right w-full"
-          />
-        </div>
-        <div className="flex justify-between my-2">
-          <label className="w-full" htmlFor="city">
-            City
-          </label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            value={city ? city : ""}
-            onChange={(e) => formSectionChange("city", e)}
-            placeholder="City"
-            className="text-right w-full"
-          />
-        </div>
-        <div className="flex justify-between my-2">
-          <label className="w-full" htmlFor="state">
-            State{" "}
-          </label>
-          <select
-            onChange={(e) => formSectionChange("state", e)}
-            id="state"
-            name="state"
-            value={homeState ? homeState : ""}
-            className="w-full"
-          >
-            {renderStates()}
-          </select>
-        </div>
-        <div className="flex justify-between my-2">
-          <label className="w-full" htmlFor="zip">
-            ZIP Code{" "}
-          </label>
-          <input
-            type="text"
-            id="zip"
-            name="zip"
-            value={zip ? zip : ""}
-            onChange={(e) => formSectionChange("zip", e)}
-            placeholder="ZIP Code"
-            className="text-right w-full sm:w-auto"
-          />
-        </div>
-        <button className="bg-green-300 py-3 rounded-md mt-5" type="submit">
-          Submit
-        </button>
-        <button
-          className="bg-red-300 text-white py-3 rounded-md mt-5"
-          onClick={() => router.back()}
-        >
-          Cancel
-        </button>
-      </form>
+            <div className="flex justify-between my-2">
+              <label className="w-full" htmlFor="school">
+                Associated School:{" "}
+              </label>
+              <select
+                value={school ? school._id : ""}
+                onChange={handleSchoolChange}
+                id="school"
+                name="school"
+                className="w-full"
+              >
+                {renderOptions()}
+              </select>
+            </div>
+            <div className="flex justify-between my-2">
+              <label className="w-full" htmlFor="name">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={name ? name : ""}
+                onChange={(e) => formSectionChange("name", e)}
+                placeholder="Place Name"
+                className="text-right w-full"
+              />
+            </div>
+            <div className="flex justify-between my-2">
+              <label className="w-full" htmlFor="address">
+                Address
+              </label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                value={address ? address : ""}
+                onChange={(e) => formSectionChange("address", e)}
+                placeholder="Place Address"
+                className="text-right w-full"
+              />
+            </div>
+            <div className="flex justify-between my-2">
+              <label className="w-full" htmlFor="city">
+                City
+              </label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                value={city ? city : ""}
+                onChange={(e) => formSectionChange("city", e)}
+                placeholder="City"
+                className="text-right w-full"
+              />
+            </div>
+            <div className="flex justify-between my-2">
+              <label className="w-full" htmlFor="state">
+                State{" "}
+              </label>
+              <select
+                onChange={(e) => formSectionChange("state", e)}
+                id="state"
+                name="state"
+                value={homeState ? homeState : ""}
+                className="w-full"
+              >
+                {renderStates()}
+              </select>
+            </div>
+            <div className="flex justify-between my-2">
+              <label className="w-full" htmlFor="zip">
+                ZIP Code{" "}
+              </label>
+              <input
+                type="text"
+                id="zip"
+                name="zip"
+                value={zip ? zip : ""}
+                onChange={(e) => formSectionChange("zip", e)}
+                placeholder="ZIP Code"
+                className="text-right w-full sm:w-auto"
+              />
+            </div>
+            <button className="bg-green-300 py-3 rounded-md mt-5" type="submit">
+              Submit
+            </button>
+            <button
+              className="bg-red-300 text-white py-3 rounded-md mt-5"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </button>
+          </form>
+        </>
+      )}
+
       {error.state && (
         <div className="mt-5 w-full">
           <ErrorMsg

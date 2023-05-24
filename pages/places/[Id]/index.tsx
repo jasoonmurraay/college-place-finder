@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   MouseEvent,
-  useRef,
 } from "react";
 import {
   Establishment,
@@ -19,22 +18,13 @@ import {
 import axios from "axios";
 import { useRouter } from "next/router";
 import dotenv from "dotenv";
-import ReactMapGL, {
-  AttributionControl,
-  Marker,
-  ViewStateChangeEvent,
-  LngLatBounds,
-} from "react-map-gl";
-import { WebMercatorViewport } from "viewport-mercator-project";
 import { LoginContext } from "@/context/Login";
-dotenv.config();
-import { Viewport } from "@/data/interfaces";
 import Head from "next/head";
 import Footer from "@/components/Footer";
 import ErrorMsg from "@/components/ErrorMsg";
 import ReviewComponent from "@/components/ReviewComponent";
-import mapboxgl from "mapbox-gl";
 import Map from "@/components/Map";
+dotenv.config();
 
 type PropsType = {
   data?: Establishment;
@@ -59,23 +49,6 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
   }, [handleResize]);
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
-  const latitude = data?.Latitude;
-  const longitude = data?.Longitude;
-  const [viewState, setViewState] = useState({
-    latitude: latitude,
-    longitude: longitude,
-    zoom: 16,
-    marker: {
-      longitude: longitude,
-      latitude: latitude,
-    },
-    schoolMarker: {
-      longitude: Number(data?.School.longitude),
-      latitude: Number(data?.School.latitude),
-    },
-  });
-  const [markerVisible, setMarkerVisible] = useState(true);
-  const [schoolMarker, setSchoolMarker] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -98,55 +71,6 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
   const reload = () => {
     router.reload();
   };
-
-  const handleViewportChange = useCallback(
-    (evt: ViewStateChangeEvent) => {
-      type viewEvent = {
-        width: number;
-        height: number;
-        latitude: number;
-        longitude: number;
-        zoom: number;
-      };
-      const newEvent: viewEvent = {
-        width: evt.target._containerWidth,
-        height: evt.target._containerHeight,
-        latitude: evt.viewState.latitude,
-        longitude: evt.viewState.longitude,
-        zoom: evt.viewState.zoom,
-      };
-      const viewportBounds = new WebMercatorViewport(newEvent).getBounds();
-      if (longitude && latitude) {
-        setMarkerVisible(
-          longitude >= viewportBounds[0][0] &&
-            longitude <= viewportBounds[1][0] &&
-            latitude >= viewportBounds[0][1] &&
-            latitude <= viewportBounds[1][1]
-        );
-        setSchoolMarker(
-          Number(data.School.longitude) >= viewportBounds[0][0] &&
-            Number(data.School.longitude) <= viewportBounds[1][0] &&
-            Number(data.School.latitude) >= viewportBounds[0][1] &&
-            Number(data.School.latitude) <= viewportBounds[1][1]
-        );
-      }
-
-      setViewState({
-        latitude: evt.viewState.latitude,
-        longitude: evt.viewState.longitude,
-        zoom: evt.viewState.zoom,
-        marker: {
-          longitude: viewState.marker.longitude,
-          latitude: viewState.marker.latitude,
-        },
-        schoolMarker: {
-          longitude: viewState.schoolMarker.longitude,
-          latitude: viewState.schoolMarker.latitude,
-        },
-      });
-    },
-    [setViewState]
-  );
 
   const [distance, setDistance] = useState<number | null>(null);
 
@@ -189,7 +113,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
     const getUser = async () => {
       const id = loginCtx.loginState?.id;
       await axios
-        .get("http://localhost:5000/profile", {
+        .get(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
           params: {
             query: id,
           },
@@ -371,7 +295,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
     if (!loginCtx.loginState?.id) {
       router.push("/login");
     } else {
-      await axios("http://localhost:5000/favorites", {
+      await axios(`${process.env.NEXT_PUBLIC_API_URL}/favorites`, {
         method: fav ? "put" : "post",
         data: {
           placeId: data?._id,
@@ -402,44 +326,6 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
             <>
               <section className="mb-10 flex flex-col items-center w-full max-w-800 ">
                 <div className="mt-5 h-1/2 h-60 w-full sm:w-2/4 ">
-                  {/* <ReactMapGL
-                    {...viewState}
-                    mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-                    mapStyle="mapbox://styles/mapbox/streets-v12"
-                    onMove={handleViewportChange}
-                    attributionControl={false}
-                    style={{
-                      height: "100%",
-                      width: "100%",
-                    }}
-                  >
-                    {markerVisible && (
-                      <Marker
-                        longitude={longitude}
-                        latitude={latitude}
-                        offset={[0, -250]}
-                        anchor="bottom"
-                        style={{ width: 20 }}
-                      >
-                        <img className="w-full h-full" src="/map-pin.png" />
-                      </Marker>
-                    )}
-                    {schoolMarker && (
-                      <Marker
-                        longitude={Number(data.School.longitude)}
-                        latitude={Number(data.School.latitude)}
-                        offset={[0, -250]}
-                        anchor="bottom"
-                        style={{ width: 20 }}
-                      >
-                        <img className="w-full h-full" src="/map-pin-red.png" />
-                      </Marker>
-                    )}
-
-                    <div className="flex items-center">
-                      {/* <AttributionControl /> */}
-                  {/* </div> */}
-                  {/* </ReactMapGL> */}
                   <Map
                     latitude={data.Latitude}
                     longitude={data.Longitude}
@@ -574,7 +460,7 @@ export default PlaceId;
 export async function getServerSideProps(context: contextType) {
   try {
     const data = await axios
-      .get(`http://localhost:5000/places/${context.params.Id}`)
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/places/${context.params.Id}`)
       .then((data) => {
         return {
           props: {

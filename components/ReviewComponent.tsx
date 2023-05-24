@@ -99,7 +99,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
     e.preventDefault();
     if (props.review) {
       await axios
-        .delete(`http://localhost:5000/reviews`, {
+        .delete(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
           data: {
             userId: loginCtx.loginState?.id,
             reviewId: props.review._id,
@@ -139,7 +139,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
         otherComments: formValues.otherComments,
         timeStamp: props.review ? props.review.timeStamp : null,
       };
-      await axios("http://localhost:5000/reviews", {
+      await axios(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
         method: props.review ? "patch" : "post",
         data: newReview,
       }).then((res) => {

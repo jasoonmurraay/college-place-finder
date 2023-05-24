@@ -65,7 +65,7 @@ const editPlace = ({ data, error }: PropsType) => {
   const submitHandler = async (enteredData: FormData) => {
     if (data) {
       await axios
-        .patch(`http://localhost:5000/places/${data._id}`, {
+        .patch(`${process.env.NEXT_PUBLIC_API_URL}/places/${data._id}`, {
           school: enteredData.school,
           name: enteredData.name,
           address: enteredData.address,
@@ -110,7 +110,7 @@ export default editPlace;
 export async function getServerSideProps(context: contextType) {
   try {
     const data = await axios
-      .get(`http://localhost:5000/places/${context.params.Id}`)
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/places/${context.params.Id}`)
       .then((data) => {
         console.log("Place data: ", data.data.place);
         return {

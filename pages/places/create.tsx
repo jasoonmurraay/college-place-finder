@@ -8,6 +8,7 @@ import { LoginContext } from "@/context/Login";
 import PlaceModifier from "@/components/PlaceModifier";
 import Footer from "@/components/Footer";
 import Head from "next/head";
+import ErrorMsg from "@/components/ErrorMsg";
 
 type FormData = {
   school: School | null;
@@ -23,9 +24,12 @@ const CreatePlace = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [school, setSchool] = useState(null);
+  const [sendError, setSendError] = useState({ state: false, message: "" });
 
   useEffect(() => {
     if (router.query.id) {
+      setLoading(true);
+      setSendError({ state: false, message: "" });
       const getSchool = async () => {
         await axios
           .get(`http://localhost:5000/schools/${router.query.id}`)
@@ -34,12 +38,12 @@ const CreatePlace = () => {
           });
       };
       getSchool();
-      setLoading(false);
     }
+    setLoading(false);
   }, [router.query]);
 
   const placeProps = {
-    school: school ? school : null,
+    school: school,
     name: null,
     address: null,
     images: null,
@@ -66,7 +70,7 @@ const CreatePlace = () => {
         }
       })
       .catch((err) => {
-        console.log(err);
+        setSendError({ state: true, message: err.response.data.message });
       });
   };
 
@@ -80,6 +84,11 @@ const CreatePlace = () => {
         <main className="flex flex-col items-center">
           <h1 className="text-xl font-bold mt-5">Add a Place</h1>
           <PlaceModifier data={placeProps} onSubmit={handleSubmit} />
+          {sendError.state && (
+            <div className="mt-5">
+              <ErrorMsg message={sendError.message} />
+            </div>
+          )}
         </main>
       )}
       {loading && <p>Loading...</p>}

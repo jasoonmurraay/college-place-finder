@@ -20,7 +20,6 @@ type PropsType = {
     school: School | null;
     name: string | null;
     address: string | null;
-    images: FileList | null;
     zip: string | null;
     homeState: string | null;
     city: string | null;
@@ -30,7 +29,6 @@ type PropsType = {
 const PlaceModifier = (props: PropsType) => {
   const router = useRouter();
   const data = props.data;
-  console.log("props: ", data);
   const [error, setError] = useState<{
     state: boolean;
     message: string;
@@ -40,12 +38,10 @@ const PlaceModifier = (props: PropsType) => {
   const [school, setSchool] = useState(data.school);
   const [name, setName] = useState(data.name);
   const [address, setAddress] = useState(data.address);
-  const [images, setImages] = useState<FileList | null>(data.images);
   const [zip, setZip] = useState(data.zip);
   const [homeState, setHomeState] = useState(data.homeState);
   const [city, setCity] = useState(data.city);
 
-  console.log("School in Modifier: ", school);
   useEffect(() => {
     const fetchSchools = async () => {
       const schools = await axios.get("http://localhost:5000/schools");
@@ -55,7 +51,7 @@ const PlaceModifier = (props: PropsType) => {
     if (data.school) {
       setSchool(data.school);
     }
-  }, []);
+  }, [data]);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError({ state: false, message: "", missingFields: [] });
@@ -99,8 +95,6 @@ const PlaceModifier = (props: PropsType) => {
     }
   };
 
-  console.log("Modifer error state: ", error);
-
   const formSectionChange = (
     type: string,
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -120,11 +114,6 @@ const PlaceModifier = (props: PropsType) => {
         break;
       case "state":
         setHomeState(event.target.value);
-        break;
-      case "image":
-        if ((event.target as HTMLInputElement).files) {
-          setImages((event.target as HTMLInputElement).files);
-        }
         break;
     }
   };
@@ -186,20 +175,25 @@ const PlaceModifier = (props: PropsType) => {
   };
   return (
     <>
-      <form className="flex flex-col" onSubmit={handleSubmit}>
+      <form className="flex flex-col w-4/5 sm:w-1/2" onSubmit={handleSubmit}>
         <div className="flex justify-between my-2">
-          <label htmlFor="school">Associated School: </label>
+          <label className="w-full" htmlFor="school">
+            Associated School:{" "}
+          </label>
           <select
             value={school ? school._id : ""}
             onChange={handleSchoolChange}
             id="school"
             name="school"
+            className="w-full"
           >
             {renderOptions()}
           </select>
         </div>
         <div className="flex justify-between my-2">
-          <label htmlFor="name">Name</label>
+          <label className="w-full" htmlFor="name">
+            Name
+          </label>
           <input
             type="text"
             id="name"
@@ -207,11 +201,13 @@ const PlaceModifier = (props: PropsType) => {
             value={name ? name : ""}
             onChange={(e) => formSectionChange("name", e)}
             placeholder="Place Name"
-            className="text-right"
+            className="text-right w-full"
           />
         </div>
         <div className="flex justify-between my-2">
-          <label htmlFor="address">Address</label>
+          <label className="w-full" htmlFor="address">
+            Address
+          </label>
           <input
             type="text"
             id="address"
@@ -219,11 +215,13 @@ const PlaceModifier = (props: PropsType) => {
             value={address ? address : ""}
             onChange={(e) => formSectionChange("address", e)}
             placeholder="Place Address"
-            className="text-right"
+            className="text-right w-full"
           />
         </div>
         <div className="flex justify-between my-2">
-          <label htmlFor="city">City</label>
+          <label className="w-full" htmlFor="city">
+            City
+          </label>
           <input
             type="text"
             id="city"
@@ -231,22 +229,27 @@ const PlaceModifier = (props: PropsType) => {
             value={city ? city : ""}
             onChange={(e) => formSectionChange("city", e)}
             placeholder="City"
-            className="text-right"
+            className="text-right w-full"
           />
         </div>
         <div className="flex justify-between my-2">
-          <label htmlFor="state">State </label>
+          <label className="w-full" htmlFor="state">
+            State{" "}
+          </label>
           <select
             onChange={(e) => formSectionChange("state", e)}
             id="state"
             name="state"
             value={homeState ? homeState : ""}
+            className="w-full"
           >
             {renderStates()}
           </select>
         </div>
         <div className="flex justify-between my-2">
-          <label htmlFor="zip">ZIP Code </label>
+          <label className="w-full" htmlFor="zip">
+            ZIP Code{" "}
+          </label>
           <input
             type="text"
             id="zip"
@@ -254,7 +257,7 @@ const PlaceModifier = (props: PropsType) => {
             value={zip ? zip : ""}
             onChange={(e) => formSectionChange("zip", e)}
             placeholder="ZIP Code"
-            className="text-right"
+            className="text-right w-full sm:w-auto"
           />
         </div>
         <button className="bg-green-300 py-3 rounded-md mt-5" type="submit">

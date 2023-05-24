@@ -504,6 +504,9 @@ const ReviewComponent = (props: ReviewCompProps) => {
               <div className="flex flex-col">
                 <label htmlFor="otherComments">Other Comments:</label>
                 <textarea
+                  className="p-3"
+                  cols={10}
+                  rows={8}
                   value={formValues.otherComments}
                   onChange={(e) => {
                     setFormValues({

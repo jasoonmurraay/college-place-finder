@@ -445,6 +445,7 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
                     longitude={data.Longitude}
                     places={null}
                     school={data.School}
+                    zoom={16}
                   />
                 </div>
                 <section className="flex flex-col items-center z-[1] md:w-2/4">

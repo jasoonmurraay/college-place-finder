@@ -290,6 +290,22 @@ app.get("/schools/:id", async (req, res) => {
   }
 });
 
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const earthRadius = 3958.8; // Radius of the earth in miles
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = earthRadius * c;
+  return distance;
+};
+
 app.post("/places", async (req, res) => {
   const { address, city, state, zip, school, name, creator } = req.body;
   const fullAddress = `${address} ${city} ${state} ${zip}`;
@@ -299,7 +315,9 @@ app.post("/places", async (req, res) => {
       `https://api.mapbox.com/geocoding/v5/mapbox.places/${fullAddress}.json?proximity=ip&access_token=${token}`
     )
     .then(async (data) => {
+      console.log("mapbox data: ", data);
       const coordinates = data.data.features[0].geometry.coordinates;
+
       await client.connect();
       const places = client.db("Places").collection("Places");
       const existingPlace = await places.findOne({
@@ -316,6 +334,22 @@ app.post("/places", async (req, res) => {
         const users = client.db("Users").collection("Users");
         const user = await users.findOne({ _id: new ObjectId(creator) });
         console.log("User: ", user);
+
+        // Calculate the distance between the coordinates and the school's coordinates
+        const distance = haversineDistance(
+          coordinates[1],
+          coordinates[0],
+          school.latitude,
+          school.longitude
+        );
+
+        if (distance > 20) {
+          console.log("Too far!");
+          return res
+            .status(400)
+            .send({ message: "This place is too far away from the school" });
+        }
+
         const newPlace = await places.insertOne({
           Name: name,
           School: currSchool,

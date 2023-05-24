@@ -19,15 +19,16 @@ type MapProps = {
   longitude: number;
   school: School | null;
   places: PlaceData[] | null;
+  zoom: number;
 };
 
 const Map = (props: MapProps) => {
-  console.log("School: ", props.school);
+  console.log("Map props: ", props);
   const router = useRouter();
   const mapRef = useRef(null);
   const [lng, setLng] = useState(props.longitude);
   const [lat, setLat] = useState(props.latitude);
-  const [zoom, setZoom] = useState(13);
+  const [zoom, setZoom] = useState(props.zoom);
   const convertGeoJSON = (lat: number, lng: number) => {
     return {
       type: "Feature",
@@ -50,6 +51,7 @@ const Map = (props: MapProps) => {
     }
   };
   const placeJSON = convertAllGeoJSON(props.places);
+  const mainPoint = convertGeoJSON(lat, lng);
   useEffect(() => {
     if (mapRef.current) {
       if (typeof process.env.NEXT_PUBLIC_MAPBOX_TOKEN === "string") {
@@ -77,6 +79,36 @@ const Map = (props: MapProps) => {
         setZoom(Number(map.getZoom().toFixed(2)));
       });
       map.on("load", () => {
+        map.loadImage("/map-pin.png", (error, image) => {
+          if (error) throw error;
+          map.addImage("pin", image);
+        });
+        map.loadImage("/map-pin-red.png", (error, image) => {
+          if (error) throw error;
+          map.addImage("main-pin", image);
+        });
+        map.addLayer({
+          id: "school-marker",
+          type: "symbol",
+          source: {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [
+                  Number(props.school?.longitude) || 0,
+                  Number(props.school?.latitude) || 0,
+                ],
+              },
+            },
+          },
+          layout: {
+            "icon-image": "main-pin",
+            "icon-size": 0.03,
+            "text-field": "",
+          },
+        });
         if (placeJSON) {
           map.addSource("places", {
             type: "geojson",
@@ -103,11 +135,11 @@ const Map = (props: MapProps) => {
               "circle-color": [
                 "step",
                 ["get", "point_count"],
-                "#51bbd6",
-                2,
-                "#f1f075",
+                "#93C5FD",
                 3,
-                "#f28cb1",
+                "#FDBA74",
+                5,
+                "#FCA5A5",
               ],
               "circle-pitch-scale": "viewport",
               "circle-pitch-alignment": "map",
@@ -121,17 +153,10 @@ const Map = (props: MapProps) => {
             filter: ["has", "point_count"],
             layout: {
               "text-field": ["get", "point_count_abbreviated"],
-              "text-size": 12,
+              "text-size": 16,
             },
           });
-          map.loadImage("/map-pin.png", (error, image) => {
-            if (error) throw error;
-            map.addImage("pin", image);
-          });
-          map.loadImage("/map-pin-red.png", (error, image) => {
-            if (error) throw error;
-            map.addImage("main-pin", image);
-          });
+
           map.addLayer({
             id: "unclustered-point",
             type: "symbol",
@@ -143,80 +168,88 @@ const Map = (props: MapProps) => {
               "text-field": "",
             },
           });
-          map.addLayer({
-            id: "school-marker",
-            type: "symbol",
-            source: {
-              type: "geojson",
-              data: {
-                type: "Feature",
-                geometry: {
-                  type: "Point",
-                  coordinates: [
-                    Number(props.school?.longitude) || 0,
-                    Number(props.school?.latitude) || 0,
-                  ],
-                },
-              },
-            },
-            layout: {
-              "icon-image": "main-pin",
-              "icon-size": 0.03,
-              "text-field": "",
-            },
-          });
+
           const popup = new mapboxgl.Popup({
             closeButton: false,
             closeOnClick: false,
             offset: [6 * zoom, -300],
           });
-          map.on("mouseenter", "unclustered-point", (e) => {
+          map.on("click", "unclustered-point", (e) => {
             map.getCanvas().style.cursor = "pointer";
             if (props.places) {
               for (let i = 0; i < props.places.length; i++) {
                 if (
                   Number(
-                    props.places[i].latitude.toString().substring(0, 6)
-                  ) === Number(e.lngLat.lat.toString().substring(0, 6)) &&
+                    props.places[i].latitude.toString().substring(0, 7)
+                  ) === Number(e.lngLat.lat.toString().substring(0, 7)) &&
                   Number(
-                    props.places[i].longitude.toString().substring(0, 6)
-                  ) === Number(e.lngLat.lng.toString().substring(0, 6))
+                    props.places[i].longitude.toString().substring(0, 7)
+                  ) === Number(e.lngLat.lng.toString().substring(0, 7))
                 ) {
                   const popupLngLat = [
                     Number(props.places[i].longitude),
                     Number(props.places[i].latitude),
                   ];
 
+                  const popupContent = document.createElement("div");
+                  popupContent.className = "popup-container";
+
+                  const closeButton = document.createElement("button");
+                  closeButton.className = "popup-close-button";
+                  closeButton.innerHTML = "&times;";
+                  closeButton.addEventListener("click", () => {
+                    popup.remove();
+                  });
+
+                  const link = document.createElement("a");
+                  link.href = "#"; // Set initial href value to a placeholder
+
+                  // Add click event listener to the link
+                  link.addEventListener("click", (event) => {
+                    event.preventDefault(); // Prevent the default link behavior
+                    router.push(`/places/${props.places[i]._id}`); // Use router to navigate
+                  });
+
+                  link.textContent = props.places[i].name;
+
+                  popupContent.appendChild(link);
+                  popupContent.appendChild(closeButton);
+
                   popup
                     .setLngLat(popupLngLat)
-                    .setHTML(`${props.places[i].name}`)
+                    .setDOMContent(popupContent)
                     .addTo(map);
                 }
               }
             }
           });
 
+          map.on("mouseenter", "unclustered-point", () => {
+            map.getCanvas().style.cursor = "pointer";
+          });
+
           map.on("mouseleave", "unclustered-point", () => {
             map.getCanvas().style.cursor = "";
-            popup.remove();
           });
-          map.on("click", "unclustered-point", (e) => {
-            if (props.places) {
-              for (let i = 0; i < props.places?.length; i++) {
-                if (
-                  Number(
-                    props.places[i].latitude.toString().substring(0, 6)
-                  ) === Number(e.lngLat.lat.toString().substring(0, 6)) &&
-                  Number(
-                    props.places[i].longitude.toString().substring(0, 6)
-                  ) === Number(e.lngLat.lng.toString().substring(0, 6))
-                ) {
-                  router.push(`/places/${props.places[i]._id}`);
-                  break;
-                }
-              }
-            }
-          });
+        } else {
+          if (
+            props.latitude !== Number(props.school?.latitude) &&
+            props.longitude !== Number(props.school?.longitude)
+          ) {
+            map.addLayer({
+              id: "main-place-marker",
+              type: "symbol",
+              source: {
+                type: "geojson",
+                data: mainPoint,
+              },
+              layout: {
+                "icon-image": "pin",
+                "icon-size": 0.03,
+                "text-field": "",
+              },
+            });
+          }
         }
       });
       return () => map.remove();

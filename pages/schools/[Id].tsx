@@ -188,7 +188,9 @@ const schoolPage = (props: PropsType) => {
                 className="w-64 h-48 max-w-96 px-4 py-2 flex flex-col items-center transition-transform duration-300 ease-out hover:-translate-y-1"
               >
                 <div className="h-full w-full shadow-md p-4 rounded-md flex flex-col items-center justify-center bg-gray-100">
-                  <h3 className="font-medium">{establishment.name}</h3>
+                  <h3 className="font-medium text-center">
+                    {establishment.name}
+                  </h3>
                   <p>{establishment.address}</p>
                   {drinkQuality === 0 || serviceQuality === 0 ? (
                     <p>No reviews yet</p>
@@ -328,8 +330,10 @@ const schoolPage = (props: PropsType) => {
   return (
     <>
       <Head>
-        <title aria-label={`Places associated with ${props.school.CommonName}`}>
-          {props.school.CommonName}
+        <title
+          aria-label={`Bars and restaurants associated with ${props.school.CommonName}`}
+        >
+          {props.school.CommonName} Bars and Restaurants
         </title>
       </Head>
       <Navbar />
@@ -363,6 +367,7 @@ const schoolPage = (props: PropsType) => {
                 longitude={longitude}
                 school={props.school}
                 places={props.places.data}
+                zoom={13}
               />
             </div>
           </section>

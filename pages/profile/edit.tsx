@@ -59,12 +59,10 @@ const editProfile = (props: EditProfProps) => {
       }
     };
     if (loginCtx.loginState) {
+      getProfileData();
       setLoading(false);
     }
-    if (!loading) {
-      getProfileData();
-    }
-  }, [loginCtx.loginState, loading]);
+  }, [loginCtx.loginState]);
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await axios
@@ -194,12 +192,20 @@ const editProfile = (props: EditProfProps) => {
           </div>
           <div className="flex flex-col items-center justify-center">
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              onClick={() => router.back()}
+              className="bg-red-300 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-transform duration-300 ease-out hover:-translate-y-1 mb-3"
+            >
+              Cancel
+            </button>
+            <button
+              className="bg-blue-300 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-transform duration-300 ease-out hover:-translate-y-1"
               type="submit"
             >
               Submit Changes
             </button>
-            <a href="/forgot">Want to change your password?</a>
+            <a className="text-blue-500 underline" href="/forgot">
+              Want to change your password?
+            </a>
           </div>
         </form>
       </main>

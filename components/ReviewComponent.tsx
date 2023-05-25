@@ -238,7 +238,7 @@ const ReviewComponent = (props: ReviewCompProps) => {
               </p>
               <div className="flex flex-col justify-center">
                 <button
-                  className="bg-blue-300 text-white p-3 my-2 rounded-md"
+                  className="bg-blue-300 text-white p-3 my-2 rounded-md w-full"
                   onClick={() => setShowFull(!showFull)}
                 >
                   {showFull ? "Show Less" : "Show More"}
@@ -247,13 +247,13 @@ const ReviewComponent = (props: ReviewCompProps) => {
                 {props.canEdit && props.review && (
                   <>
                     <button
-                      className="bg-orange-300 text-white p-3 my-2 rounded-md"
+                      className="bg-orange-300 text-white p-3 my-2 rounded-md w-full"
                       onClick={() => setEditing(true)}
                     >
                       Edit Review
                     </button>
                     <button
-                      className="bg-red-300 text-white p-3 my-2 rounded-md"
+                      className="bg-red-300 text-white p-3 my-2 rounded-md w-full"
                       onClick={deleteHandler}
                     >
                       Delete Review

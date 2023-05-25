@@ -34,19 +34,6 @@ type PropsType = {
 
 const PlaceId = ({ data, error, reviews }: PropsType) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [windowSize, setWindowSize] = useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 0,
-    height: typeof window !== "undefined" ? window.innerHeight : 0,
-  });
-  const handleResize = useCallback(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-  }, []);
-  useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [handleResize]);
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -57,6 +44,8 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
     state: false,
     message: "",
   });
+
+  console.log("Render");
 
   useEffect(() => {
     if (data || error) {
@@ -119,7 +108,6 @@ const PlaceId = ({ data, error, reviews }: PropsType) => {
           },
         })
         .then((fetchData) => {
-          console.log("Fetch profile: ", fetchData);
           if (fetchData && fetchData.status === 400) {
             setUser(null);
           } else {

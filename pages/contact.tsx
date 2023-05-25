@@ -27,6 +27,8 @@ const contact = () => {
   const [error, setError] = useState({ state: false, message: "" });
   const submitHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSuccess(false);
+    setError({ state: false, message: "" });
     if (textRef.current && textRef.current.value === "") {
       setError({
         state: true,
@@ -34,8 +36,7 @@ const contact = () => {
       });
       return;
     }
-    setSuccess(false);
-    setError({ state: false, message: "" });
+
     const templateParams = {
       message: textRef.current ? textRef.current.value : "",
       from_name: loginCtx ? loginCtx.loginState?.email : null,

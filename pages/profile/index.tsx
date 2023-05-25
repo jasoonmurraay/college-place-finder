@@ -17,7 +17,6 @@ const Profile = () => {
   const [data, setData] = useState<User>();
   const [loading, setLoading] = useState(true);
   const [startDeleting, setStartDeleting] = useState(false);
-  console.log("Profile data: ", data);
 
   useEffect(() => {
     if (loginCtx.loginState) {
@@ -245,7 +244,7 @@ const Profile = () => {
           )}
         </div>
       ) : (
-        <main>
+        <main className="flex flex-col items-center justify-center">
           <LoadingSpinner />
         </main>
       )}

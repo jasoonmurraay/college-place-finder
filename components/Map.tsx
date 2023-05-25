@@ -23,7 +23,6 @@ type MapProps = {
 };
 
 const Map = (props: MapProps) => {
-  console.log("Map props: ", props);
   const router = useRouter();
   const mapRef = useRef(null);
   const [lng, setLng] = useState(props.longitude);

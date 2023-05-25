@@ -77,11 +77,6 @@ const ReviewComponent = (props: ReviewCompProps) => {
 
     if (props.review?.author?.favSchools) {
       for (let i = 0; i < props.review?.author?.favSchools.length; i++) {
-        console.log(
-          "fav school: ",
-          props.review.author.favSchools[i]._id,
-          props.review.place._id
-        );
         if (
           props.review.author.favSchools[i]._id ===
           props.review.place.School._id
@@ -151,8 +146,6 @@ const ReviewComponent = (props: ReviewCompProps) => {
       });
     }
   };
-
-  console.log("Home fan: ", homeFan);
 
   return (
     <>

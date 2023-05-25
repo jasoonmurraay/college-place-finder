@@ -6,12 +6,15 @@ import axios from "axios";
 import ErrorMsg from "@/components/ErrorMsg";
 import { LoginContext } from "@/context/Login";
 import { useRouter } from "next/router";
+import SuccessFlash from "@/components/SuccessFlash";
 
 const forgot = () => {
   const loginCtx = useContext(LoginContext);
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const defaultState = { state: false, message: "" };
+  const [success, setSuccess] = useState(defaultState);
+  const [error, setError] = useState(defaultState);
 
   const validateEmail = (email: string) => {
     const re = /\S+@\S+\.\S+/;
@@ -20,23 +23,30 @@ const forgot = () => {
 
   const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    setSuccess(defaultState);
+    setError(defaultState);
     if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address.");
+      setError({ state: true, message: "Please enter a valid email address." });
       return;
     }
-
-    setEmailError("");
 
     await axios
       .post(`${process.env.NEXT_PUBLIC_API_URL}/reset-password`, {
         email: email,
       })
       .then(() => {
-        // Handle success
+        setSuccess({
+          state: true,
+          message:
+            "Request submitted!  Please check your email for a link to reset your password.",
+        });
+        setEmail("");
       })
-      .catch((error) => {
-        // Handle error
+      .catch(() => {
+        setError({
+          state: true,
+          message: "There was an error processing your request.",
+        });
       });
   };
 
@@ -47,6 +57,16 @@ const forgot = () => {
       </Head>
       <Navbar />
       <main className="flex flex-col items-center">
+        {success.state && (
+          <div className="w-full">
+            <SuccessFlash message={success.message} redirect={null} />
+          </div>
+        )}
+        {error.state && (
+          <div className=" w-full">
+            <ErrorMsg message={error.message} />
+          </div>
+        )}
         <h1 className="text-xl font-bold my-5">Reset password</h1>
         <form
           noValidate
@@ -63,7 +83,7 @@ const forgot = () => {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setEmailError("");
+              setError(defaultState);
             }}
           ></input>
 
@@ -71,11 +91,6 @@ const forgot = () => {
             Submit
           </button>
         </form>
-        {emailError && (
-          <div className="mt-5 w-full">
-            <ErrorMsg message={emailError} />
-          </div>
-        )}
       </main>
       <Footer />
     </>
